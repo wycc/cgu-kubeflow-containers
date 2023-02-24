@@ -13,7 +13,7 @@
 # It can be obtained by running `docker inspect repo/imagename:tag@digest` or from
 # https://github.com/jupyter/docker-stacks/wiki
 
-ARG BASE_VERSION=9ed3b8de5de1
+ARG BASE_VERSION=ed2908bbb62e
 FROM jupyter/datascience-notebook:$BASE_VERSION
 
 USER root
@@ -24,39 +24,34 @@ RUN apt-get update --yes \
     && apt-get install --yes language-pack-fr \
     && rm -rf /var/lib/apt/lists/*
 
-# Python is downgraded because of ml-metadata
-RUN conda install -c conda-forge python=3.8.12 -y && \
-  fix-permissions $CONDA_DIR && \
-  fix-permissions /home/$NB_USER
-
 ###############################
-###  docker-bits/1_CUDA-11.6.Dockerfile
+###  docker-bits/1_CUDA-11.7.Dockerfile
 ###############################
 
-# Cuda stuff for v11.6.2
+# Cuda stuff for v11.7
 
-## https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/base/Dockerfile
+## https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.7.0/ubuntu1804/base/Dockerfile
 
 ###########################
 ### Base
 ###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/base/Dockerfile
+# https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.7.0/ubuntu1804/base/Dockerfile
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg2 curl ca-certificates && \
     apt-get purge --autoremove -y curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV CUDA_VERSION 11.6.2
+ENV CUDA_VERSION 11.7.0
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y wget && \
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb && \
     dpkg -i cuda-keyring_1.0-1_all.deb && \
     apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-11-6=11.6.55-1 \
-    cuda-compat-11-6 \
-    && ln -s cuda-11.6 /usr/local/cuda && \
+    cuda-cudart-11-7=11.7.60-1 \
+    cuda-compat-11-7 \
+    && ln -s cuda-11.7 /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*
 
 # Required for nvidia-docker v1
@@ -69,45 +64,31 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.6 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.7 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=unknown,driver>=510,driver<511 brand=nvidia,driver>=510,driver<511 brand=nvidiartx,driver>=510,driver<511 brand=quadrortx,driver>=510,driver<511"
 
 # ###########################
 # ### Devel
 # ###########################
-# # https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/devel/Dockerfile
+# # https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.7.0/ubuntu1804/devel/Dockerfile
 #
-# $(curl -s https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/devel/Dockerfile)
+# $(curl -s https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.7.0/ubuntu1804/devel/Dockerfile)
 
 ###########################
 ### Runtime
 ###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/runtime/Dockerfile
+# https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.7.0/ubuntu1804/runtime/Dockerfile
 
 ENV NCCL_VERSION 2.12.12
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-libraries-11-6=11.6.2-1 \
-    libnpp-11-6=11.6.3.124-1 \
-    cuda-nvtx-11-6=11.6.124-1 \
-    libcusparse-11-6=11.7.2.124-1 \
-    libcublas-11-6=11.9.2.110-1 \
-    libnccl2=$NCCL_VERSION-1+cuda11.6 \
+    cuda-libraries-11-7=11.7.0-1 \
+    libnpp-11-7=11.7.3.21-1 \
+    cuda-nvtx-11-7=11.7.50-1 \
+    libcusparse-11-7=11.7.3.50-1 \
+    libcublas-11-7=11.10.1.25-1 \
+    libnccl2=$NCCL_VERSION-1+cuda11.7 \
     && apt-mark hold libnccl2 \
     && rm -rf /var/lib/apt/lists/*
-
-###########################
-### CudNN
-###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/blob/92d100e5ad724656d3b7315db8ce268ab7cb9d91/dist/11.6.2/ubuntu1804/runtime/cudnn8/Dockerfile
-
-ENV CUDNN_VERSION 8.4.1.50
-
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn8=$CUDNN_VERSION-1+cuda11.6 \
-    && apt-mark hold libcudnn8 && \
-    rm -rf /var/lib/apt/lists/*
 
 ###############################
 ###  docker-bits/2_tensorflow.Dockerfile
@@ -115,7 +96,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Tensorflow
 RUN pip install --quiet \
-        'tensorflow-gpu' \
+        'tensorflow' \
         'keras' \
         'ipykernel==5.3.4' \
     && \
@@ -133,14 +114,11 @@ RUN pip3 --no-cache-dir install --quiet \
       'Pillow==9.0.1' \
       'notebook==6.4.1' \
       'PyYAML==5.4.1' \
-      'jupyterlab==3.0.17' && \
+      'jupyterlab==3.5.3' && \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
 RUN pip3 --no-cache-dir install --quiet \
-      'kfp==1.7.2' \
-      'kfp-server-api==1.7.1' \
-      'ml-metadata==0.27.0' \
       'kubeflow-metadata==0.2.0' \
       'kubeflow-pytorchjob==0.1.3' \
       'kubeflow-tfjob==0.1.3' \
@@ -150,10 +128,8 @@ RUN pip3 --no-cache-dir install --quiet \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
-# kfp-azure-databricks needs to be run after kfp
 RUN pip3 --no-cache-dir install --quiet \
-      'fire==0.3.1' \
-      'git+https://github.com/kubeflow/pipelines@1d86111d8f152d3ed7506ea59cee1bfbc28abbf9#egg=kfp-azure-databricks&subdirectory=samples/contrib/azure-samples/kfp-azure-databricks' && \
+      'fire==0.3.1' && \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
@@ -195,8 +171,8 @@ ARG AZCLI_URL=https://aka.ms/InstallAzureCLIDeb
 ARG OH_MY_ZSH_URL=https://raw.githubusercontent.com/loket/oh-my-zsh/feature/batch-mode/tools/install.sh
 ARG OH_MY_ZSH_SHA=22811faf34455a5aeaba6f6b36f2c79a0a454a74c8b4ea9c0760d1b2d7022b03
 
-ARG TRINO_URL=https://repo1.maven.org/maven2/io/trino/trino-cli/396/trino-cli-396-executable.jar
-ARG TRINO_SHA=438347986c281a2cf419131ce999d6db1bb37488b141f68de62325e1cbbc927a
+ARG TRINO_URL=https://repo1.maven.org/maven2/io/trino/trino-cli/406/trino-cli-406-executable.jar
+ARG TRINO_SHA=70f7ab57cf74f655942d14f4baafebac32ca64ca833790411691a69b574c16bb
 # Add helpers for shell initialization
 COPY shell_helpers.sh /tmp/shell_helpers.sh
 
@@ -257,14 +233,14 @@ RUN apt-get update && \
 # TODO: use official package jupyterlab-language-pack-fr-FR when released by Jupyterlab instead of the StatCan/jupyterlab-language-pack-fr_FR repo.
 
 # Install vscode
-ARG VSCODE_VERSION=4.5.1
-ARG VSCODE_SHA=f43e217706044aea9d8ae4f8ce1185c3ebfadf980bcf668ab94ecccb70e99709
+ARG VSCODE_VERSION=4.10.0
+ARG VSCODE_SHA=e0746fe7f013d367193060ec40eb81627957d8a8d6b850778a30d56fc54db276
 ARG VSCODE_URL=https://github.com/coder/code-server/releases/download/v${VSCODE_VERSION}/code-server_${VSCODE_VERSION}_amd64.deb
 
 USER root
 
 ENV CS_DISABLE_FILE_DOWNLOADS=1
-ENV XDG_DATA_HOME=$HOME/.local/share
+ENV XDG_DATA_HOME=/etc/share
 ENV SERVICE_URL=https://extensions.coder.com/api
 
 RUN wget -q "${VSCODE_URL}" -O ./vscode.deb \
@@ -274,27 +250,25 @@ RUN wget -q "${VSCODE_URL}" -O ./vscode.deb \
     && dpkg -i ./vscode.deb \
     && rm ./vscode.deb \
     && rm -f /etc/apt/sources.list.d/vscode.list \
-    && mkdir -p $XDG_DATA_HOME/code-server/extensions 
+    && mkdir -p $HOME/.local/share \
+    && mkdir -p $XDG_DATA_HOME/code-server/extensions
 
+COPY vscode-overrides.json $XDG_DATA_HOME/code-server/Machine/settings.json
 # Fix for VSCode extensions and CORS
 # Languagepacks.json needs to exist for code-server to recognize the languagepack
 COPY languagepacks.json $XDG_DATA_HOME/code-server/
-ARG SHA256py=d32d8737858661451705faa9f176f8a1a03485b2d9984de40d45cc0403a3bcf4
+ARG SHA256py=10368d0175e34583a84935e691dba122d4ece2e23305700f226b6807508a30b1
 
-RUN VS_PYTHON_VERSION="2021.5.829140558" && \
-    wget --quiet --no-check-certificate https://github.com/microsoft/vscode-python/releases/download/$VS_PYTHON_VERSION/ms-python-release.vsix && \
-    echo "${SHA256py} ms-python-release.vsix" | sha256sum -c - && \
-    code-server --install-extension ms-python-release.vsix && \
-    rm ms-python-release.vsix && \
-    code-server --install-extension ikuyadeu.r@1.6.6 && \
-    code-server --install-extension MS-CEINTL.vscode-language-pack-fr@1.68.3 && \
+RUN code-server --install-extension ms-python.python@2022.16.1 && \
+    code-server --install-extension REditorSupport.r@2.7.0 && \
+    code-server --install-extension ms-ceintl.vscode-language-pack-fr@1.75.0 && \
+    code-server --install-extension quarto.quarto@1.53.1 && \
     fix-permissions $XDG_DATA_HOME
 
 # Default environment
 RUN pip install --quiet \
       'jupyter-lsp==1.2.0' \
       'jupyter-server-proxy==1.6.0' \
-      'kubeflow-kale==0.6.1' \
       'jupyterlab_execute_time==2.0.1' \
       'markupsafe==2.0.1' \
       'git+https://github.com/betatim/vscode-binder' \
@@ -338,7 +312,7 @@ RUN pip3 --no-cache-dir install --quiet \
       'Pillow==9.0.1' \
       'notebook==6.4.1' \
       'pyyaml==5.4.1' \
-      'jupyterlab==3.0.17' && \
+      'jupyterlab==3.5.3' && \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
@@ -350,13 +324,15 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
       'r-languageserver' \
       'python-lsp-server' \
     && \
-    jlpm add --dev \
-      'bash-language-server' \
-      'dockerfile-language-server-nodejs' \
-      'javascript-typescript-langserver' \
-      #'sql-language-server' \  #Removed due to vulnerabilities and lack of updates upstream on this
-      'unified-language-server' \
-      'yaml-language-server@0.18.0' \
+    npm i -g \
+    'bash-language-server'  \
+    'dockerfile-language-server-nodejs' \
+    'javascript-typescript-langserver' \
+    'unified-language-server' \
+    'yaml-language-server@0.18.0'  && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER  \
     && \
     conda clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
@@ -396,7 +372,8 @@ COPY trino-wrapper.sh /usr/local/bin/trino
 
 # Add --user to all pip install calls and point pip to Artifactory repository
 COPY pip.conf /tmp/pip.conf
-RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf
+RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf \
+    && pip config set global.timeout 300
 
 # Point R to Artifactory repository
 COPY Rprofile.site /tmp/Rprofile.site
@@ -404,7 +381,9 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 
 # Point conda to Artifactory repository
 RUN conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-remote --system && \
-    conda config --remove channels conda-forge --system
+    conda config --remove channels conda-forge --system && \
+    conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
+    conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
 
 USER $NB_USER
 ENTRYPOINT ["tini", "--"]
