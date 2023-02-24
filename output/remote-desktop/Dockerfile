@@ -577,6 +577,12 @@ RUN cat /tmp/.condarc > /opt/conda/.condarc && rm /tmp/.condarc
 COPY Rprofile.site /tmp/Rprofile.site
 RUN cat /tmp/Rprofile.site >> /usr/local/lib/R/etc/Rprofile.site && rm /tmp/Rprofile.site
 
-USER $NB_USER
+# install strace for debugging 
+USER root
+RUN apt-get update --yes \
+  &&apt-get install strace   
+
+#USER $NB_USER
+USER root
 ENTRYPOINT ["tini", "--"]
 CMD ["start-remote-desktop.sh"]
