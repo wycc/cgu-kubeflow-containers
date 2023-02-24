@@ -143,6 +143,7 @@ RUN \
         subversion \
         jed \
         git \
+        git-gui \
         # odbc drivers
         unixodbc unixodbc-dev \
         # Image support
@@ -226,8 +227,8 @@ RUN \
     bsdtar -xf ms-python-release.vsix extension && \
     rm ms-python-release.vsix && \
     mv extension $HOME/.vscode/extensions/ms-python.python-$VS_PYTHON_VERSION && \
-    VS_FRENCH_VERSION="1.50.2" && \
-    VS_LOCALE_REPO_VERSION="1.50" && \
+    VS_FRENCH_VERSION="1.68.3" && \
+    VS_LOCALE_REPO_VERSION="1.68.3" && \
     git clone -b release/$VS_LOCALE_REPO_VERSION https://github.com/microsoft/vscode-loc.git && \
     cd vscode-loc && \
     npm install -g --unsafe-perm vsce@1.103.1 && \
@@ -244,7 +245,6 @@ RUN \
     # Cleanup
     clean-layer.sh
 
-
 #QGIS
 COPY qgis-2022.gpg.key $RESOURCES_PATH/qgis-2022.gpg.key
 COPY remote-desktop/qgis.sh $RESOURCES_PATH/qgis.sh
@@ -260,7 +260,7 @@ RUN /bin/bash $RESOURCES_PATH/r-studio-desktop.sh && \
 #Libre office
 RUN add-apt-repository ppa:libreoffice/ppa && \
     apt-get install -y eog && \
-    apt-get install -y libreoffice-calc libreoffice-gtk3 && \
+    apt-get install -y libreoffice-calc libreoffice-writer libreoffice-gtk3 && \
     apt-get install -y libreoffice-help-fr libreoffice-l10n-fr && \
     clean-layer.sh
 
@@ -332,7 +332,7 @@ RUN usermod -l $NB_USER rstudio && \
     chown -R $NB_UID:$NB_GID $HOME
 
 ENV NB_USER=$NB_USER
-
+ENV NB_NAMESPACE=$NB_NAMESPACE
 # https://github.com/novnc/websockify/issues/413#issuecomment-664026092
 RUN apt-get update && apt-get install --yes websockify \
     && cp /usr/lib/websockify/rebind.cpython-38-x86_64-linux-gnu.so /usr/lib/websockify/rebind.so \

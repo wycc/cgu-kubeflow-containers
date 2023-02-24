@@ -11,9 +11,9 @@
 # https://github.com/jupyter/docker-stacks/blob/master/Makefile
 
 # The docker-stacks tag
-DOCKER-STACKS-UPSTREAM-TAG := 9ed3b8de5de1
+DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 
-tensorflow-CUDA := 11.6
+tensorflow-CUDA := 11.7
 pytorch-CUDA    := 11.7
 
 # https://stackoverflow.com/questions/5917413/concatenate-multiple-files-but-include-filename-as-section-headers
@@ -118,11 +118,12 @@ sas:
 	cp -r resources/sas/. $(OUT)/$@
 
 	$(CAT) \
-		$(SRC)/0_cpu.Dockerfile \
+		$(SRC)/0_cpu_sas.Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
 		$(SRC)/5_DB-Drivers.Dockerfile \
 		$(SRC)/6_jupyterlab.Dockerfile \
+		$(SRC)/6_rstudio.Dockerfile\
 		$(SRC)/6_$(@).Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD.Dockerfile \

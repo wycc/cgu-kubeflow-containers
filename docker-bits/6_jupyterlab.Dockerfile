@@ -11,14 +11,14 @@
 # TODO: use official package jupyterlab-language-pack-fr-FR when released by Jupyterlab instead of the StatCan/jupyterlab-language-pack-fr_FR repo.
 
 # Install vscode
-ARG VSCODE_VERSION=4.5.1
-ARG VSCODE_SHA=f43e217706044aea9d8ae4f8ce1185c3ebfadf980bcf668ab94ecccb70e99709
+ARG VSCODE_VERSION=4.10.0
+ARG VSCODE_SHA=e0746fe7f013d367193060ec40eb81627957d8a8d6b850778a30d56fc54db276
 ARG VSCODE_URL=https://github.com/coder/code-server/releases/download/v${VSCODE_VERSION}/code-server_${VSCODE_VERSION}_amd64.deb
 
 USER root
 
 ENV CS_DISABLE_FILE_DOWNLOADS=1
-ENV XDG_DATA_HOME=$HOME/.local/share
+ENV XDG_DATA_HOME=/etc/share
 ENV SERVICE_URL=https://extensions.coder.com/api
 
 RUN wget -q "${VSCODE_URL}" -O ./vscode.deb \
@@ -28,27 +28,25 @@ RUN wget -q "${VSCODE_URL}" -O ./vscode.deb \
     && dpkg -i ./vscode.deb \
     && rm ./vscode.deb \
     && rm -f /etc/apt/sources.list.d/vscode.list \
-    && mkdir -p $XDG_DATA_HOME/code-server/extensions 
+    && mkdir -p $HOME/.local/share \
+    && mkdir -p $XDG_DATA_HOME/code-server/extensions
 
+COPY vscode-overrides.json $XDG_DATA_HOME/code-server/Machine/settings.json
 # Fix for VSCode extensions and CORS
 # Languagepacks.json needs to exist for code-server to recognize the languagepack
 COPY languagepacks.json $XDG_DATA_HOME/code-server/
-ARG SHA256py=d32d8737858661451705faa9f176f8a1a03485b2d9984de40d45cc0403a3bcf4
+ARG SHA256py=10368d0175e34583a84935e691dba122d4ece2e23305700f226b6807508a30b1
 
-RUN VS_PYTHON_VERSION="2021.5.829140558" && \
-    wget --quiet --no-check-certificate https://github.com/microsoft/vscode-python/releases/download/$VS_PYTHON_VERSION/ms-python-release.vsix && \
-    echo "${SHA256py} ms-python-release.vsix" | sha256sum -c - && \
-    code-server --install-extension ms-python-release.vsix && \
-    rm ms-python-release.vsix && \
-    code-server --install-extension ikuyadeu.r@1.6.6 && \
-    code-server --install-extension MS-CEINTL.vscode-language-pack-fr@1.68.3 && \
+RUN code-server --install-extension ms-python.python@2022.16.1 && \
+    code-server --install-extension REditorSupport.r@2.7.0 && \
+    code-server --install-extension ms-ceintl.vscode-language-pack-fr@1.75.0 && \
+    code-server --install-extension quarto.quarto@1.53.1 && \
     fix-permissions $XDG_DATA_HOME
 
 # Default environment
 RUN pip install --quiet \
       'jupyter-lsp==1.2.0' \
       'jupyter-server-proxy==1.6.0' \
-      'kubeflow-kale==0.6.1' \
       'jupyterlab_execute_time==2.0.1' \
       'markupsafe==2.0.1' \
       'git+https://github.com/betatim/vscode-binder' \
@@ -92,7 +90,7 @@ RUN pip3 --no-cache-dir install --quiet \
       'Pillow==9.0.1' \
       'notebook==6.4.1' \
       'pyyaml==5.4.1' \
-      'jupyterlab==3.0.17' && \
+      'jupyterlab==3.5.3' && \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
@@ -104,13 +102,15 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
       'r-languageserver' \
       'python-lsp-server' \
     && \
-    jlpm add --dev \
-      'bash-language-server' \
-      'dockerfile-language-server-nodejs' \
-      'javascript-typescript-langserver' \
-      #'sql-language-server' \  #Removed due to vulnerabilities and lack of updates upstream on this
-      'unified-language-server' \
-      'yaml-language-server@0.18.0' \
+    npm i -g \
+    'bash-language-server'  \
+    'dockerfile-language-server-nodejs' \
+    'javascript-typescript-langserver' \
+    'unified-language-server' \
+    'yaml-language-server@0.18.0'  && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER  \
     && \
     conda clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
