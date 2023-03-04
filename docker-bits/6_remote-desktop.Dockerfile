@@ -380,6 +380,8 @@ RUN pip3 install --force websockify==0.9.0 \
     && wget https://gist.githubusercontent.com/sylus/cb01e59056780a2161186139b25818fb/raw/99ebd62a304c661d5612ad72ebc318f70d02741c/feat-notebook-Patch-noVNC-for-notebooks.patch \
     && patch -p1 < feat-notebook-Patch-noVNC-for-notebooks.patch
 
+COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
+COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
 
 USER root
