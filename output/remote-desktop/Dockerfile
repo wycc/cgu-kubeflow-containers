@@ -518,6 +518,8 @@ RUN pip3 install --force websockify==0.9.0 \
     && wget https://gist.githubusercontent.com/sylus/cb01e59056780a2161186139b25818fb/raw/99ebd62a304c661d5612ad72ebc318f70d02741c/feat-notebook-Patch-noVNC-for-notebooks.patch \
     && patch -p1 < feat-notebook-Patch-noVNC-for-notebooks.patch
 
+COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
+COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
 
 USER root
@@ -530,6 +532,21 @@ RUN apt-get update --yes \
 RUN chown -R $NB_USER /home/$NB_USER
 USER $NB_USER
 COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
+
+# setup tinyfilemanager
+USER root
+RUN apt update \
+    && sudo apt install -y software-properties-common \
+    && add-apt-repository ppa:ondrej/php \
+    && apt update \
+    && apt install php8.1-fpm -y
+USER $NB_USER 
+COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
+
+# temporary store, will move to home directory after start
+COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
+
+USER $NB_USER
 
 ###############################
 ###  docker-bits/7_remove_vulnerabilities.Dockerfile
@@ -561,24 +578,23 @@ RUN chmod +x /usr/local/bin/trino
 RUN chsh -s /bin/bash $NB_USER
 
 # Add --user to all pip install calls and point pip to Artifactory repository
-COPY pip.conf /tmp/pip.conf
-RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf \
-    && pip config set global.timeout 300
+#COPY pip.conf /tmp/pip.conf
+#RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf \
+#    && pip config set global.timeout 300
 
 # Point conda to Artifactory repository
-COPY .condarc /tmp/.condarc
-RUN cat /tmp/.condarc > /opt/conda/.condarc && rm /tmp/.condarc
+#COPY .condarc /tmp/.condarc
+#RUN cat /tmp/.condarc > /opt/conda/.condarc && rm /tmp/.condarc
+RUN rm -rf /opt/conda/envs && \
+    ln -s /home/jovyan/envs /opt/conda && \
+    mkdir -p /home/jovyan/envs
 
 # Point R to Artifactory repository
 COPY Rprofile.site /tmp/Rprofile.site
 RUN cat /tmp/Rprofile.site >> /usr/local/lib/R/etc/Rprofile.site && rm /tmp/Rprofile.site
 
-# install strace for debugging 
-USER root
-RUN apt-get update --yes \
-  &&apt-get install strace   
-
 #USER $NB_USER
 USER root
 ENTRYPOINT ["tini", "--"]
 CMD ["start-remote-desktop.sh"]
+

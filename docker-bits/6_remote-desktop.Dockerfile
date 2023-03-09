@@ -394,3 +394,18 @@ RUN apt-get update --yes \
 RUN chown -R $NB_USER /home/$NB_USER
 USER $NB_USER
 COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
+
+# setup tinyfilemanager
+USER root
+RUN apt update \
+    && sudo apt install -y software-properties-common \
+    && add-apt-repository ppa:ondrej/php \
+    && apt update \
+    && apt install php8.1-fpm -y
+USER $NB_USER 
+COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
+
+# temporary store, will move to home directory after start
+COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
+
+USER $NB_USER
