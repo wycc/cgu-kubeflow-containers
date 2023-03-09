@@ -138,5 +138,9 @@ echo "novnc has been configured, launching novnc"
 NB_PREFIX=${NB_PREFIX:-/vnc}
 sed -i "s~\${NB_PREFIX}~$NB_PREFIX~g" /etc/nginx/nginx.conf
 
+# start php service, and tinyfilemanager
+service php8.1-fpm start
+mv /var/www/html/index.php $HOME/index.php
+
 nginx
 wait
