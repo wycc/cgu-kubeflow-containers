@@ -1,3 +1,10 @@
+# CGU AI-classes platform
+This repository contains images used in the CGU AI classes platform. It bases on
+
+https://github.com/StatCan/aaw-kubeflow-containers
+
+We are contineously adding features to satify the needs for CGI's AI-related computer classes. We are welcome for anybody to join out effort to create a better platform for the teaching. If you are insteresting, you can send a pull request or contact wycca1@gmail.com.
+
 # Containers for Kubeflow
 
 Container images to be used with kubeflow on the AAW platform for Data Science & other workloads.
