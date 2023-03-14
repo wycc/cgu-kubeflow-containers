@@ -142,5 +142,8 @@ sed -i "s~\${NB_PREFIX}~$NB_PREFIX~g" /etc/nginx/nginx.conf
 service php8.1-fpm start
 mv /var/www/html/index.php $HOME/index.php
 
+# fix home folder permission
+# chown jovyan:users $HOME/*
+
 nginx
 wait

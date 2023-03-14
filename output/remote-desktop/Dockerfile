@@ -542,6 +542,7 @@ RUN apt update \
     && apt install php8.1-fpm -y
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
+COPY php8.1-fpm /etc/init.d/php8.1-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
