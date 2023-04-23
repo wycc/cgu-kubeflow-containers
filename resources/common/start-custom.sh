@@ -16,19 +16,23 @@ fi
 test -z "$GIT_EXAMPLE_NOTEBOOKS" || git clone "$GIT_EXAMPLE_NOTEBOOKS"
 
 # Configure the shell! If not already configured.
-if [ ! -f /home/$NB_USER/.zsh-installed ]; then
-    if [ -f /tmp/oh-my-zsh-install.sh ]; then
-      sh /tmp/oh-my-zsh-install.sh --unattended --skip-chsh
-    fi
+# if [ ! -f /home/$NB_USER/.zsh-installed ]; then
+#     if [ -f /tmp/oh-my-zsh-install.sh ]; then
+#       sh /tmp/oh-my-zsh-install.sh --unattended --skip-chsh
+#     fi
 
-    if conda --help > /dev/null 2>&1; then
-      conda init bash
-      conda init zsh
-    fi
-    cat /tmp/shell_helpers.sh >> /home/$NB_USER/.bashrc
-    cat /tmp/shell_helpers.sh >> /home/$NB_USER/.zshrc
-    touch /home/$NB_USER/.zsh-installed
-fi
+#     if conda --help > /dev/null 2>&1; then
+#       conda init bash
+#       conda init zsh
+#     fi
+#     cat /tmp/shell_helpers.sh >> /home/$NB_USER/.bashrc
+#     cat /tmp/shell_helpers.sh >> /home/$NB_USER/.zshrc
+#     touch /home/$NB_USER/.zsh-installed
+#     touch /home/$NB_USER/.hushlogin
+# fi
+
+export VISUAL="/usr/bin/nano"
+export EDITOR="$VISUAL"
 
 echo "shell has been configured"
 
@@ -134,6 +138,7 @@ fi
 echo "--------------------starting jupyter--------------------"
 
 /opt/conda/bin/jupyter server --notebook-dir=/home/${NB_USER} \
+                 --allow-root \
                  --ip=0.0.0.0 \
                  --no-browser \
                  --port=8888 \

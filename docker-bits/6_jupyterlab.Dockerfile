@@ -7,8 +7,6 @@
     # jupyterlab-archive
     # jupyterlab-spellchecker
     # jupyterlab-spreadsheet
-# JupyterLab 3.0 introduced i18n and i10n which now allows us to have a fully official languages compliant image.
-# TODO: use official package jupyterlab-language-pack-fr-FR when released by Jupyterlab instead of the StatCan/jupyterlab-language-pack-fr_FR repo.
 
 # Install vscode
 ARG VSCODE_VERSION=4.10.0
@@ -45,27 +43,27 @@ RUN code-server --install-extension ms-python.python@2022.16.1 && \
 
 # Default environment
 RUN pip install --quiet \
-      'jupyter-lsp==1.2.0' \
-      'jupyter-server-proxy==1.6.0' \
-      'jupyterlab_execute_time==2.0.1' \
-      'markupsafe==2.0.1' \
+      'jupyter-lsp==1.5.1' \
+      'jupyter-server-proxy==3.2.2' \
+      'jupyterlab_execute_time==2.3.1' \
+      'markupsafe==2.1.2' \
       'git+https://github.com/betatim/vscode-binder' \
     && \
     conda install --quiet --yes \
     -c conda-forge \
-      'ipywidgets==7.6.3' \
-      'ipympl==0.7.0' \
-      'jupyter_contrib_nbextensions==0.5.1' \
+      'ipywidgets==8.0.4' \
+      'ipympl==0.9.3' \
+      'jupyter_contrib_nbextensions==0.7.0' \
       'nb_conda_kernels==2.3.1' \
     && \
     conda install --quiet --yes \
       -c plotly \
-      'jupyter-dash==0.4.0' \
+      'jupyter-dash==0.4.2' \
     && \
     pip install \
-      'jupyterlab-git==0.30.0' \
-      'jupyterlab-lsp==3.6.0' \
-      'git+https://github.com/StatCan/jupyterlab-language-pack-fr_FR.git' \
+      'jupyterlab-git==0.41.0' \
+      'jupyterlab-lsp==3.10.2' \
+      'jupyterlab-language-pack-fr-FR' \
     && \
     conda clean --all -f -y && \
     jupyter serverextension enable --py jupyter_server_proxy && \
@@ -87,10 +85,12 @@ RUN pip install --quiet \
 # Update and pin packages
 # See https://github.com/StatCan/aaw-kubeflow-containers/issues/293
 RUN pip3 --no-cache-dir install --quiet \
-      'Pillow==9.0.1' \
-      'notebook==6.4.1' \
-      'pyyaml==5.4.1' \
-      'jupyterlab==3.5.3' && \
+      'pillow==9.4.0' \
+      'matplotlib' \
+      'ipywebrtc' \
+      'notebook==6.5.3' \
+      'pyyaml==6.0' \
+      'jupyterlab==3.6.1' && \
       fix-permissions $CONDA_DIR && \
       fix-permissions /home/$NB_USER
 
@@ -120,4 +120,4 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
 
 ENV DEFAULT_JUPYTER_URL=/lab
-ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/StatCan/aaw-contrib-jupyter-notebooks
+ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/fdsf53451001/cgu-contrib-jupyter-notebooks
