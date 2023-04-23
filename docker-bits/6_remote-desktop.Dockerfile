@@ -383,6 +383,10 @@ RUN pip3 install --force websockify==0.9.0 \
 COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
 COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
+COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js
+COPY --chown=$NB_USER:100 keyboard.js /opt/novnc/core/input/keyboard.js
+COPY --chown=$NB_USER:100 rfb.js /opt/novnc/core/rfb.js
+COPY --chown=$NB_USER:100 ssl.conf /opt/novnc/utils/ssl.conf
 
 USER root
 RUN apt-get update --yes \
@@ -390,10 +394,19 @@ RUN apt-get update --yes \
     && chown -R $NB_USER:100 /var/log/nginx \
     && chown $NB_USER:100 /etc/nginx \
     && chmod -R 755 /var/log/nginx \
-    && rm -rf /var/lib/apt/lists/*
-RUN chown -R $NB_USER /home/$NB_USER
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /etc/nginx/ca
+RUN chown -R $NB_USER /home/$NB_USER 
+
 USER $NB_USER
 COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
+
+# setup ssl certificate for WebSocket
+USER root
+RUN apt update \
+    && sudo apt install openssl -y \
+    && cd /opt/novnc/utils \
+    && openssl req -new -x509 -days 3650 -nodes -out self.pem -keyout self.pem -config ssl.conf
 
 # setup tinyfilemanager
 USER root
