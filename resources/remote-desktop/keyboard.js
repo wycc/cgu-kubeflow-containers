@@ -33,6 +33,26 @@ export default class Keyboard {
 
         this.onkeyevent = () => {}; // Handler for key press/release
         this.onpaste = () => {}; // Handler for key press/release
+
+        // ===== Timer =====
+        this._clipboardText = "";
+        this.pasteTimer = setInterval(() => {
+            // TODO: Firefox未開啟async clipboard 時不支援 Permission API。
+            navigator.permissions.query({ name: 'clipboard-read' }).then(result => {
+                // 判斷是否為當前頁面，否則直接調用會報錯 Document is not fucused.
+                const hasFocus = document.hasFocus();
+
+                if (hasFocus && (result.state === 'granted' || result.state === 'prompt')) {
+                    navigator.clipboard.readText().then(text => {
+                        if (this._clipboardText !== text) {
+                            console.log(`new clipboardText: ${text}`);
+                            this._clipboardText = text;
+                            this.onpaste(text);
+                        }
+                    })
+                }
+            })
+        }, 3000);
     }
 
     // ===== PRIVATE METHODS =====
@@ -88,14 +108,15 @@ export default class Keyboard {
         const code = this._getKeyCode(e);
         let keysym = KeyboardUtil.getKeysym(e);
 
-        // Better Clipboard
-        if (( code === 'KeyV') &&
-            ('ControlLeft' in this._keyDownList || 'ControlRight' in this._keyDownList)) {
-            navigator.clipboard.readText().then((text) => {
-                console.log(text);
-                this.onpaste(text);
-            })
-        }
+        // Better Clipboard (replace by Timer, current not used)
+        // if (( code === 'KeyV') &&
+        //     ('ControlLeft' in this._keyDownList || 'ControlRight' in this._keyDownList)) {
+        //     navigator.clipboard.readText().then((text) => {
+        //         console.log(text);
+        //         this.onpaste(text);
+        //     })
+        // }
+
         // Windows doesn't have a proper AltGr, but handles it using
         // fake Ctrl+Alt. However the remote end might not be Windows,
         // so we need to merge those in to a single AltGr event. We
