@@ -52,7 +52,7 @@ export default class Keyboard {
                     })
                 }
             })
-        }, 3000);
+        }, 1000);
     }
 
     // ===== PRIVATE METHODS =====
