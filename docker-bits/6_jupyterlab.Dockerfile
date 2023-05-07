@@ -116,6 +116,17 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
+# Install common package
+RUN pip install --quiet \
+        # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
+        'gradio' \
+        'matplotlib' \
+        'gdown' \
+        'opencv-python' \
+    && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
 # Solarized Theme and Cell Execution Time
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
 
