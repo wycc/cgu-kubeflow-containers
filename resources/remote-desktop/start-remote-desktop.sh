@@ -79,6 +79,20 @@ if [ -d $RESOURCES_PATH/desktop-files ]; then
     find $HOME/Desktop -type f -iname "*.desktop" -exec chmod +x {} \;
     mkdir -p $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
     cp /opt/install/desktop-files/.config/xfce4/xfce4-panel.xml $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
+
+    . /opt/ros/noetic/setup.bash
+    mkdir -p $HOME/catkin_ws
+    mv /opt/catkin_ws/src $HOME/catkin_ws
+    mv /opt/catkin_ws/devel $HOME/catkin_ws
+    mv /opt/catkin_ws/build $HOME/catkin_ws
+    cd $HOME/catkin_ws && catkin_make
+    #. /opt/ros/noetic/setup.bash
+    #echo "ln -s $HOME/catkin_ws /opt" >> ~/.bashrc
+    echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+    #echo ". /opt/catkin_ws/devel/setup.bash ">> ~/.bashrc
+    cd $HOME/catkin_ws && catkin_make && . devel/setup.bash
+    echo "export TURTLEBOT3_MODEL=waffle_pi" >> ~/.bashrc
+    echo "export CUDA_CACHE_MAXSIZE=4294967296" >> ~/.bashrc
 fi
 
 export NB_NAMESPACE=$(echo $NB_PREFIX | awk -F '/' '{print $3}')
