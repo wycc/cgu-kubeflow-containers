@@ -166,7 +166,7 @@ remote-desktop:
 	>   $(OUT)/$@/Dockerfile
 	
 # Remote Desktop for ROS
-remote-desktop-ROS:
+remote-desktop-ros:
 	mkdir -p $(OUT)/$@
 	echo "REMOTE DESKTOP ROS"
 	cp -r scripts/remote-desktop $(OUT)/$@
@@ -178,7 +178,7 @@ remote-desktop-ROS:
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
-		$(SRC)/6_remote-desktop-ROS.Dockerfile \
+		$(SRC)/6_remote-desktop-ros.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
