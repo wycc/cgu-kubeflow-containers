@@ -15,7 +15,7 @@ DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 
 tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
-remote-desktop-CUDA := 11.1
+remote-desktop-ros-CUDA := 11.1
 
 # https://stackoverflow.com/questions/5917413/concatenate-multiple-files-but-include-filename-as-section-headers
 CAT := awk '(FNR==1){print "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n\#\#\#  " FILENAME "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n"}1'
@@ -62,7 +62,7 @@ get-docker-stacks-upstream-tag:
 generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh $(TensorFlow-CUDA) > $(SRC)/1_CUDA-$(TensorFlow-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
-	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-CUDA).Dockerfile
 
 generate-Spark:
 	bash scripts/get-spark-stuff.sh --commit $(COMMIT)  > $(SRC)/2_Spark.Dockerfile
@@ -158,14 +158,31 @@ remote-desktop:
 
 	$(CAT) \
 		$(SRC)/0_Rocker.Dockerfile \
-		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
 		$(SRC)/6_remote-desktop.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
+	
+# Remote Desktop for ROS
+remote-desktop-ROS:
+	mkdir -p $(OUT)/$@
+	echo "REMOTE DESKTOP ROS"
+	cp -r scripts/remote-desktop $(OUT)/$@
+	cp -r resources/common/. $(OUT)/$@
+	cp -r resources/remote-desktop/. $(OUT)/$@
 
+	$(CAT) \
+		$(SRC)/0_Rocker.Dockerfile \
+		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
+		$(SRC)/3_Kubeflow.Dockerfile \
+		$(SRC)/4_CLI.Dockerfile \
+		$(SRC)/6_remote-desktop-ROS.Dockerfile \
+		$(SRC)/7_remove_vulnerabilities.Dockerfile \
+		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
+	>   $(OUT)/$@/Dockerfile
+	
 # Debugging Dockerfile generator that essentially uses docker-stacks images
 # Used for when you need something to build quickly during debugging
 docker-stacks-datascience-notebook:
