@@ -366,43 +366,6 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     /opt/conda/bin/conda clean -afy && \
     chown -R $NB_UID:$NB_GID /opt/conda
 
-#Install ROS Ubuntu
-RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-RUN apt-get -y install curl
-RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-RUN apt-get update
-RUN apt-get -y install ros-noetic-desktop-full
-RUN apt-get -y install ros-noetic-joy ros-noetic-teleop-twist-joy ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc ros-noetic-rgbd-launch ros-noetic-rosserial-arduino ros-noetic-rosserial-python ros-noetic-rosserial-client ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro ros-noetic-compressed-image-transport ros-noetic-rqt-image-view ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers
-RUN apt-get -y install ros-noetic-ros-control*
-RUN apt-get -y install ros-noetic-control* -o Dpkg::Options::="--force-overwrite"
-RUN apt-get -y install ros-noetic-moveit* -o Dpkg::Options::="--force-overwrite"
-
-#Catkin_ws folder
-RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
-RUN mkdir -p /opt/catkin_ws/src
-
-
-RUN cd /opt/catkin_ws/src && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
-    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
-
-#python packages
-RUN conda install -c conda-forge rospkg
-RUN conda install -c conda-forge defusedxml
-RUN conda install -c anaconda numpy
-RUN conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch
-RUN conda install -c anaconda pandas
-RUN conda install -c conda-forge matplotlib
-RUN conda install -c anaconda tensorflow-gpu
-
-
-
-
-
 #Set Defaults
 ENV HOME=/home/$NB_USER
 
