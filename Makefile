@@ -74,7 +74,7 @@ generate-Spark:
 all:
 	@echo 'Did you mean to generate all Dockerfiles?  That has been renamed to `make generate-dockerfiles`'
 
-generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-datascience-notebook
+generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-datascience-notebook remote-desktop-ros
 	@echo "All dockerfiles created."
 
 ##############################
