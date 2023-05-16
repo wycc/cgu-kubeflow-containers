@@ -124,6 +124,9 @@ mkdir -p $HOME/.vnc
 
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
+export XMODIFIERS=@im=ibus
+export GTK_IM_MODULE=ibus
+ibus-daemon --xim -d
 startxfce4 &
 
 # Makes an unbelievable difference in speed
@@ -136,7 +139,6 @@ EOF
 mkdir -p /tmp/vnc-socket/
 VNC_SOCKET=$(mktemp /tmp/vnc-socket/vnc-XXXXXX.sock)
 trap "rm -f $VNC_SOCKET" EXIT
-
 vncserver -SecurityTypes None -rfbunixpath $VNC_SOCKET -geometry 1680x1050 :1
 cat $HOME/.vnc/*.log
 
