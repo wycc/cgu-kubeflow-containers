@@ -23,21 +23,6 @@ RUN mkdir $RESOURCES_PATH
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
 
-# Install Traditional Chinese Locale and Fonts.
-RUN \
-    apt-get update && \
-    apt-get install -y locales && \
-    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
-
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
-    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
-
 # Install Terminal / GDebi (Package Manager) / & archive tools
 RUN \
     apt-get update && \
@@ -343,7 +328,20 @@ RUN apt-get update && apt-get install --yes websockify \
 #ADD . /opt/install
 #RUN pwd && echo && ls /opt/install
 
+# Install Traditional Chinese Locale and Fonts.
+RUN \
+    apt-get update && \
+    apt-get install -y locales && \
+    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=zh_TW.UTF-8 && \
+    clean-layer.sh
 
+ENV LANG=zh_TW.UTF-8
+RUN \
+    cd /usr/local/share/fonts && \
+    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
+    fc-cache -f -v
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -413,11 +411,14 @@ RUN apt update \
 # setup tinyfilemanager
 USER root
 RUN apt update \
+    && apt-get update \
     && sudo apt install -y software-properties-common \
     && add-apt-repository ppa:ondrej/php \
     && apt update \
     && apt install php8.1-fpm -y \
-    && apt install ibus-chewing -y
+    && apt-get install language-pack-zh-han* -y \
+    && apt install ibus-gtk3 ibus-data ibus-chewing -y
+
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
 COPY php8.1-fpm /etc/init.d/php8.1-fpm

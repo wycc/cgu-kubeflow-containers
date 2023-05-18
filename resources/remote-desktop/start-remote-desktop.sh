@@ -124,10 +124,9 @@ mkdir -p $HOME/.vnc
 
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-export XMODIFIERS=@im=ibus
-export GTK_IM_MODULE=ibus
-ibus-daemon --xim -d
+sed -i '86a export XMODIFIERS=@im=ibus\nexport GTK_IM_MODULE=ibus\nexport QT_IM_MODULE=ibus\nibus-daemon -dxr' /etc/xdg/xfce4/xinitrc
 startxfce4 &
+
 
 # Makes an unbelievable difference in speed
 (sleep 10 && xdg-settings set default-web-browser firefox.desktop) &
