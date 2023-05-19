@@ -398,6 +398,7 @@ RUN conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolki
 RUN conda install -c anaconda pandas
 RUN conda install -c conda-forge matplotlib
 RUN conda install -c anaconda tensorflow-gpu
+RUN conda install -c "conda-forge/label/cf202003" opencv
 
 
 
