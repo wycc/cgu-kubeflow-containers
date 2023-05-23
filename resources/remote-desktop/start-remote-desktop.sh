@@ -124,7 +124,7 @@ mkdir -p $HOME/.vnc
 
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-sed -i '86a export XMODIFIERS=@im=ibus\nexport GTK_IM_MODULE=ibus\nexport QT_IM_MODULE=ibus\nibus-daemon -dxr' /etc/xdg/xfce4/xinitrc
+sed -i '86a export XMODIFIERS=@im=ibus\nexport GTK_IM_MODULE=ibus\nexport QT_IM_MODULE=ibus\nibus-daemon -dxr\nsleep 5s' /etc/xdg/xfce4/xinitrc
 startxfce4 &
 
 

@@ -417,7 +417,14 @@ RUN apt update \
     && apt update \
     && apt install php8.1-fpm -y \
     && apt-get install language-pack-zh-han* -y \
-    && apt install ibus-gtk3 ibus-data ibus-chewing -y
+    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
+    && chmod u+x dayisetup.sh \
+    && ./dayisetup.sh \
+    && rm dayisetup.sh \
+    && rm dayi3.cin
+
 
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
