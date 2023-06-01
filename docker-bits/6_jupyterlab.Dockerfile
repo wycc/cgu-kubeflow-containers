@@ -49,6 +49,11 @@ RUN pip install --quiet \
       'markupsafe==2.1.2' \
       'git+https://github.com/betatim/vscode-binder' \
     && \
+    # install custom extensions for jupyterlab
+    pip install \
+      'jupyterlab_tensorboard_pro' \
+      'jupyterlab-rise' \
+    && \
     conda install --quiet --yes \
     -c conda-forge \
       'ipywidgets==8.0.4' \
@@ -92,8 +97,9 @@ RUN pip3 --no-cache-dir install --quiet \
       'pyyaml==6.0' \
       'jupyterlab==3.6.1' && \
       fix-permissions $CONDA_DIR && \
-      fix-permissions /home/$NB_USER
-
+      fix-permissions /home/$NB_USER && \
+      jupyter lab build && \
+      jupyter lab clean
 
 # Install python, R, Julia and other useful language servers
 RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \

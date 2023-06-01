@@ -28,6 +28,6 @@ RUN conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-syste
     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
 
-USER $NB_USER
+USER root
 ENTRYPOINT ["tini", "--"]
 CMD ["start-custom.sh"]

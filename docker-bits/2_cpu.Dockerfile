@@ -15,3 +15,14 @@ RUN conda create -n pycpu --yes \
     conda clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
+
+# Install common package
+RUN pip install --quiet \
+        # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
+        'gradio' \
+        'matplotlib' \
+        'gdown' \
+        'opencv-python' \
+    && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER

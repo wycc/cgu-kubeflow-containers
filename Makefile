@@ -15,6 +15,7 @@ DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 
 tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
+ml-CUDA        := 11.1
 remote-desktop-CUDA := 11.1
 
 # https://stackoverflow.com/questions/5917413/concatenate-multiple-files-but-include-filename-as-section-headers
@@ -61,7 +62,8 @@ get-docker-stacks-upstream-tag:
 
 generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh $(TensorFlow-CUDA) > $(SRC)/1_CUDA-$(TensorFlow-CUDA).Dockerfile
-	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(ml-CUDA) > $(SRC)/1_CUDA-$(ml-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(all-CUDA) > $(SRC)/1_CUDA-$(all-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-CUDA).Dockerfile
 
 generate-Spark:
@@ -84,7 +86,7 @@ generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-
 # Configure the "Bases".
 #
 # Revert Stan's change made in PR#306 that includes $(SRC)/2_cpu.Dockerfile It really balloons the size of the image
-pytorch tensorflow: .output
+pytorch tensorflow ml: .output
 	$(CAT) \
 		$(SRC)/0_cpu.Dockerfile \
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
@@ -132,7 +134,7 @@ sas:
 	>   $(OUT)/$@/Dockerfile
 
 # create directories for current images
-jupyterlab: pytorch tensorflow cpu
+jupyterlab: pytorch tensorflow ml cpu
 
 	for type in $^; do \
 		mkdir -p $(OUT)/$@-$${type}; \
