@@ -23,6 +23,21 @@ RUN mkdir $RESOURCES_PATH
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
 
+# Install Traditional Chinese Locale and Fonts.
+RUN \
+    apt-get update && \
+    apt-get install -y locales && \
+    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=zh_TW.UTF-8 && \
+    clean-layer.sh
+
+ENV LANG=zh_TW.UTF-8
+RUN \
+    cd /usr/local/share/fonts && \
+    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
+    fc-cache -f -v
+
 # Install Terminal / GDebi (Package Manager) / & archive tools
 RUN \
     apt-get update && \
@@ -328,20 +343,7 @@ RUN apt-get update && apt-get install --yes websockify \
 #ADD . /opt/install
 #RUN pwd && echo && ls /opt/install
 
-# Install Traditional Chinese Locale and Fonts.
-RUN \
-    apt-get update && \
-    apt-get install -y locales && \
-    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
 
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
-    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -363,6 +365,44 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy && \
     chown -R $NB_UID:$NB_GID /opt/conda
+
+#Install ROS Ubuntu
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+RUN apt-get -y install curl
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+RUN apt-get update
+RUN apt-get -y install ros-noetic-desktop-full
+RUN apt-get -y install ros-noetic-joy ros-noetic-teleop-twist-joy ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc ros-noetic-rgbd-launch ros-noetic-rosserial-arduino ros-noetic-rosserial-python ros-noetic-rosserial-client ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro ros-noetic-compressed-image-transport ros-noetic-rqt-image-view ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers
+RUN apt-get -y install ros-noetic-ros-control*
+RUN apt-get -y install ros-noetic-control* -o Dpkg::Options::="--force-overwrite"
+RUN apt-get -y install ros-noetic-moveit* -o Dpkg::Options::="--force-overwrite"
+
+#Catkin_ws folder
+RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
+RUN mkdir -p /opt/catkin_ws/src
+
+
+RUN cd /opt/catkin_ws/src && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
+    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
+
+#python packages
+RUN conda install -c conda-forge rospkg
+RUN conda install -c conda-forge defusedxml
+RUN conda install -c anaconda numpy
+RUN conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch
+RUN conda install -c anaconda pandas
+RUN conda install -c conda-forge matplotlib
+RUN conda install -c anaconda tensorflow-gpu
+RUN conda install -c "conda-forge/label/cf202003" opencv
+
+
+
+
 
 #Set Defaults
 ENV HOME=/home/$NB_USER
@@ -411,29 +451,15 @@ RUN apt update \
 # setup tinyfilemanager
 USER root
 RUN apt update \
-    && apt-get update \
     && sudo apt install -y software-properties-common \
     && add-apt-repository ppa:ondrej/php \
     && apt update \
-    && apt install php8.1-fpm -y \
-    && apt-get install language-pack-zh-han* -y \
-    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
-    && chmod u+x dayisetup.sh \
-    && ./dayisetup.sh \
-    && rm dayisetup.sh \
-    && rm dayi3.cin
-
-
+    && apt install php8.1-fpm -y
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
 COPY php8.1-fpm /etc/init.d/php8.1-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
-
-COPY start-remote-desktop.sh /usr/local/bin/
-COPY start-remote-desktop.sh /usr/local/bin/
 
 USER $NB_USER

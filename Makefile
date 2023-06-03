@@ -17,6 +17,7 @@ tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
 ml-CUDA        := 11.1
 remote-desktop-CUDA := 11.1
+remote-desktop-ros-CUDA := 11.1
 
 # https://stackoverflow.com/questions/5917413/concatenate-multiple-files-but-include-filename-as-section-headers
 CAT := awk '(FNR==1){print "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n\#\#\#  " FILENAME "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n"}1'
@@ -65,6 +66,8 @@ generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh    $(ml-CUDA) > $(SRC)/1_CUDA-$(ml-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(all-CUDA) > $(SRC)/1_CUDA-$(all-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-CUDA).Dockerfile
 
 generate-Spark:
 	bash scripts/get-spark-stuff.sh --commit $(COMMIT)  > $(SRC)/2_Spark.Dockerfile
@@ -76,7 +79,7 @@ generate-Spark:
 all:
 	@echo 'Did you mean to generate all Dockerfiles?  That has been renamed to `make generate-dockerfiles`'
 
-generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-datascience-notebook
+generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-datascience-notebook remote-desktop-ros
 	@echo "All dockerfiles created."
 
 ##############################
@@ -160,14 +163,31 @@ remote-desktop:
 
 	$(CAT) \
 		$(SRC)/0_Rocker.Dockerfile \
-		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
 		$(SRC)/6_remote-desktop.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
+	
+# Remote Desktop for ROS
+remote-desktop-ros:
+	mkdir -p $(OUT)/$@
+	echo "REMOTE DESKTOP ROS"
+	cp -r scripts/remote-desktop $(OUT)/$@
+	cp -r resources/common/. $(OUT)/$@
+	cp -r resources/remote-desktop/. $(OUT)/$@
 
+	$(CAT) \
+		$(SRC)/0_Rocker.Dockerfile \
+		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
+		$(SRC)/3_Kubeflow.Dockerfile \
+		$(SRC)/4_CLI.Dockerfile \
+		$(SRC)/6_remote-desktop-ros.Dockerfile \
+		$(SRC)/7_remove_vulnerabilities.Dockerfile \
+		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
+	>   $(OUT)/$@/Dockerfile
+	
 # Debugging Dockerfile generator that essentially uses docker-stacks images
 # Used for when you need something to build quickly during debugging
 docker-stacks-datascience-notebook:

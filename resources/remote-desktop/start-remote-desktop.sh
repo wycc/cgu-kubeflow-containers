@@ -80,19 +80,19 @@ if [ -d $RESOURCES_PATH/desktop-files ]; then
     mkdir -p $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
     cp /opt/install/desktop-files/.config/xfce4/xfce4-panel.xml $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
 
-    . /opt/ros/noetic/setup.bash
-    mkdir -p $HOME/catkin_ws
-    mv /opt/catkin_ws/src $HOME/catkin_ws
-    mv /opt/catkin_ws/devel $HOME/catkin_ws
-    mv /opt/catkin_ws/build $HOME/catkin_ws
-    cd $HOME/catkin_ws && catkin_make
-    #. /opt/ros/noetic/setup.bash
-    #echo "ln -s $HOME/catkin_ws /opt" >> ~/.bashrc
-    echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-    #echo ". /opt/catkin_ws/devel/setup.bash ">> ~/.bashrc
-    cd $HOME/catkin_ws && catkin_make && . devel/setup.bash
-    echo "export TURTLEBOT3_MODEL=waffle_pi" >> ~/.bashrc
-    echo "export CUDA_CACHE_MAXSIZE=4294967296" >> ~/.bashrc
+    if [ -d /opt/catkin_ws/ ]; then
+        . /opt/ros/noetic/setup.bash
+        mkdir -p $HOME/catkin_ws
+        mv /opt/catkin_ws/src $HOME/catkin_ws
+        mv /opt/catkin_ws/devel $HOME/catkin_ws
+        mv /opt/catkin_ws/build $HOME/catkin_ws
+        cd $HOME/catkin_ws && catkin_make
+        echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+        cd $HOME/catkin_ws && catkin_make && . devel/setup.bash
+        echo "export TURTLEBOT3_MODEL=waffle_pi" >> ~/.bashrc
+        echo "export CUDA_CACHE_MAXSIZE=4294967296" >> ~/.bashrc
+
+    fi
 fi
 
 export NB_NAMESPACE=$(echo $NB_PREFIX | awk -F '/' '{print $3}')
@@ -124,7 +124,9 @@ mkdir -p $HOME/.vnc
 
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
+sed -i '86a export XMODIFIERS=@im=ibus\nexport GTK_IM_MODULE=ibus\nexport QT_IM_MODULE=ibus\nibus-daemon -dxr\nsleep 5s' /etc/xdg/xfce4/xinitrc
 startxfce4 &
+
 
 # Makes an unbelievable difference in speed
 (sleep 10 && xdg-settings set default-web-browser firefox.desktop) &
@@ -136,7 +138,6 @@ EOF
 mkdir -p /tmp/vnc-socket/
 VNC_SOCKET=$(mktemp /tmp/vnc-socket/vnc-XXXXXX.sock)
 trap "rm -f $VNC_SOCKET" EXIT
-
 vncserver -SecurityTypes None -rfbunixpath $VNC_SOCKET -geometry 1680x1050 :1
 cat $HOME/.vnc/*.log
 

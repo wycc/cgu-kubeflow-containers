@@ -951,7 +951,12 @@ const UI = {
     clipboardReceive(e) {
         Log.Debug(">> UI.clipboardReceive: " + e.detail.text.substr(0, 40) + "...")
         document.getElementById("noVNC_clipboard_text").value = e.detail.text
-        navigator.clipboard.writeText(e.detail.text)
+        try {
+            navigator.clipboard.writeText(e.detail.text)
+        }
+        catch (e){
+            console.log(e)
+        }
         Log.Debug("<< UI.clipboardReceive")
     },
 
