@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>remote-desktop-ros &#x4f7f;&#x7528;&#x8aaa;&#x660e;</title>
+        <style>
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+        
+    </head>
+
+<body>
+    <h1 id="remote-desktop-ros-使用說明">remote-desktop-ros-使用說明</h1>
+    <br>
+    <h4 id="workspace 位置"> ** catkin_ws位在/home/jovyan下 **</h4>
+<h2 id="建立Notebook">1. 建立Notebook</h2>
+<ul>
+<li>建立Notebook，並選擇"je5577iee/remote-desktop-ros:v1.0.1"的Image</li>
+<li>選擇所需CPU及記憶體。</li>
+<li>若需使用GPU，請選擇NVIDIA的GPU。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros1.png" alt="ros1" weight="600" height="800"></p>
+<ul>
+    <li>連線成功後，點選"Connect"。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros2.png" alt="ros2" weight="600" height="800"></p>
+<ul>
+    <li>**若遇到下圖的情況，請稍等並重新整理即可。**</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros3.png" alt="ros3" weight="600" height="800"></p>
+<ul>
+    <li>打開後會得到如下圖的畫面，點選"連線"。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros4.png" alt="ros4" weight="600" height="800"></p>
+
+<h2 id="使用Remote-Desktop-Ros">2. 使用notebook</h2>
+<ul>
+    <li>打開後畫面如下，按右鍵即可點選終端機(Terminal)。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros5.png" alt="ros5" weight="600" height="800"></p>
+<ul>
+    <li>開啟第一個終端機即可使用"roscore"(如框框所示)。</li>
+    <li>若需撰寫程式，可透過終端機或是內建的Visual Studio Code進行。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros6.png" alt="ros6" weight="600" height="800"></p>
+<ul>
+    <li>若需開啟其他終端機，可點選"File"內的"New Tab"，即可進行roslaunch及rosrun。</li>
+    <li>** 若沒辦法使用rosrun可到存放程式的 /scripts 目錄下使用"python3 [你的程式名稱].py"進行即可。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros7.png" alt="ros7" weight="600" height="800"></p>
+<ul>
+    <li>新增套件需回到catkin_ws下進行catkin_make。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros8.png" alt="ros8" weight="600" height="800"></p>
+
+<h2 id="使用GPU">3. 使用GPU</h2>
+<ul>
+    <li>可透過pytorch或tensorflow進行模型訓練，且可使用GPU。</li>
+    <li>** 若透過tensorflow進行訓練，第一次訓練時會出現如下圖的訊息，需等待約7~8分鐘才會往下進行，但下次進行訓練，就不會再遇到這個問題。</li>
+</ul>
+<p><img src="https://github.com/wycc/cgu-kubeflow-containers/tree/master/kfdocs/resources/images/ros9.png" alt="ros9" weight="600" height="800"></p>
+
+</body>
+</html>
