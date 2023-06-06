@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# move conda env to home directory to keep packages data
+if [ ! -d /home/jovyan/envs ]; then
+  mv /opt/conda/envs/ /home/jovyan/envs/
+  rm -rf /opt/conda/envs
+  ln -s /home/jovyan/envs /opt/conda
+fi
+
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then
   while ! curl -s -f http://127.0.0.1:15020/healthz/ready; do sleep 1; done

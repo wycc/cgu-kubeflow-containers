@@ -262,6 +262,17 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
+# Install common package
+RUN pip install --quiet \
+        # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
+        'gradio' \
+        'matplotlib' \
+        'gdown' \
+        'opencv-python' \
+    && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
 # Solarized Theme and Cell Execution Time
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
 
@@ -429,19 +440,20 @@ COPY mc-tenant-wrapper.sh /usr/local/bin/mc
 COPY trino-wrapper.sh /usr/local/bin/trino
 
 # Add --user to all pip install calls and point pip to Artifactory repository
-COPY pip.conf /tmp/pip.conf
-RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf \
-    && pip config set global.timeout 300
+# COPY pip.conf /tmp/pip.conf
+# RUN cat /tmp/pip.conf >> /etc/pip.conf && rm /tmp/pip.conf \
+#     && pip config set global.timeout 300
 
 # Point R to Artifactory repository
 COPY Rprofile.site /tmp/Rprofile.site
 RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rprofile.site
 
 # Point conda to Artifactory repository
-RUN conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-remote --system && \
-    conda config --remove channels conda-forge --system && \
-    conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
-    conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
+# RUN conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-remote --system && \
+#     conda config --remove channels conda-forge --system && \
+#     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
+#     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
+
 
 USER root
 ENTRYPOINT ["tini", "--"]

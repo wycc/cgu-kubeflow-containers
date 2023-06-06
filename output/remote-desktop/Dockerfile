@@ -32,86 +32,6 @@ RUN /rocker_scripts/install_shiny_server.sh \
 RUN chmod 555 /usr/local/lib/R /usr/local/lib/R/site-library/
 
 ###############################
-###  docker-bits/1_CUDA-11.1.Dockerfile
-###############################
-
-# Cuda stuff for v11.1
-
-## https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/base/Dockerfile
-
-###########################
-### Base
-###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/base/Dockerfile
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gnupg2 curl ca-certificates && \
-    apt-get purge --autoremove -y curl \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV CUDA_VERSION 11.2.0
-
-# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN apt-get update && apt-get install -y wget && \
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i cuda-keyring_1.0-1_all.deb && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-11-2=11.2.72-1 \
-    cuda-compat-11-2 \
-    && ln -s cuda-11.2 /usr/local/cuda && \
-    rm -rf /var/lib/apt/lists/*
-
-# Required for nvidia-docker v1
-RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
-    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
-
-ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
-
-# nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
-ENV NVIDIA_DISABLE_REQUIRE true
-
-# ###########################
-# ### Devel
-# ###########################
-# # https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/devel/Dockerfile
-#
-# $(curl -s https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/devel/Dockerfile)
-
-###########################
-### Runtime
-###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/runtime/Dockerfile
-
-ENV NCCL_VERSION 2.8.4
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-libraries-11-2=11.2.0-1 \
-    libnpp-11-2=11.2.1.68-1 \
-    cuda-nvtx-11-2=11.2.67-1 \
-    libcublas-11-2=11.3.1.68-1 \
-    libnccl2=$NCCL_VERSION-1+cuda11.2 \
-    && apt-mark hold libnccl2 \
-    && rm -rf /var/lib/apt/lists/*
-
-###########################
-### CudNN
-###########################
-# https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile
-
-ENV CUDNN_VERSION 8.1.1.33
-
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn8=$CUDNN_VERSION-1+cuda11.2 \
-    && apt-mark hold libcudnn8 && \
-    rm -rf /var/lib/apt/lists/*
-
-###############################
 ###  docker-bits/3_Kubeflow.Dockerfile
 ###############################
 
@@ -240,21 +160,6 @@ RUN mkdir $RESOURCES_PATH
 
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
-
-# Install Traditional Chinese Locale and Fonts.
-RUN \
-    apt-get update && \
-    apt-get install -y locales && \
-    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
-
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
-    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
 
 # Install Terminal / GDebi (Package Manager) / & archive tools
 RUN \
@@ -561,7 +466,20 @@ RUN apt-get update && apt-get install --yes websockify \
 #ADD . /opt/install
 #RUN pwd && echo && ls /opt/install
 
+# Install Traditional Chinese Locale and Fonts.
+RUN \
+    apt-get update && \
+    apt-get install -y locales && \
+    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=zh_TW.UTF-8 && \
+    clean-layer.sh
 
+ENV LANG=zh_TW.UTF-8
+RUN \
+    cd /usr/local/share/fonts && \
+    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
+    fc-cache -f -v
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -583,43 +501,6 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy && \
     chown -R $NB_UID:$NB_GID /opt/conda
-
-#Install ROS Ubuntu
-RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-RUN apt-get -y install curl
-RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-RUN apt-get update
-RUN apt-get -y install ros-noetic-desktop-full
-RUN apt-get -y install ros-noetic-joy ros-noetic-teleop-twist-joy ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc ros-noetic-rgbd-launch ros-noetic-rosserial-arduino ros-noetic-rosserial-python ros-noetic-rosserial-client ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro ros-noetic-compressed-image-transport ros-noetic-rqt-image-view ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers
-RUN apt-get -y install ros-noetic-ros-control*
-RUN apt-get -y install ros-noetic-control* -o Dpkg::Options::="--force-overwrite"
-RUN apt-get -y install ros-noetic-moveit* -o Dpkg::Options::="--force-overwrite"
-
-#Catkin_ws folder
-RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
-RUN mkdir -p /opt/catkin_ws/src
-
-
-RUN cd /opt/catkin_ws/src && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
-    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
-
-#python packages
-RUN conda install -c conda-forge rospkg
-RUN conda install -c conda-forge defusedxml
-RUN conda install -c anaconda numpy
-RUN conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch
-RUN conda install -c anaconda pandas
-RUN conda install -c conda-forge matplotlib
-RUN conda install -c anaconda tensorflow-gpu
-
-
-
-
 
 #Set Defaults
 ENV HOME=/home/$NB_USER
@@ -668,16 +549,30 @@ RUN apt update \
 # setup tinyfilemanager
 USER root
 RUN apt update \
+    && apt-get update \
     && sudo apt install -y software-properties-common \
     && add-apt-repository ppa:ondrej/php \
     && apt update \
-    && apt install php8.1-fpm -y
+    && apt install php8.1-fpm -y \
+    && apt-get install language-pack-zh-han* -y \
+    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
+    && chmod u+x dayisetup.sh \
+    && ./dayisetup.sh \
+    && rm dayisetup.sh \
+    && rm dayi3.cin
+
+
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
 COPY php8.1-fpm /etc/init.d/php8.1-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
+
+COPY start-remote-desktop.sh /usr/local/bin/
+COPY start-remote-desktop.sh /usr/local/bin/
 
 USER $NB_USER
 
