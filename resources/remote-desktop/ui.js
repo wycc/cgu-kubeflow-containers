@@ -1643,8 +1643,6 @@ const UI = {
                 .classList.add('noVNC_hidden');
             document.getElementById('noVNC_clipboard_button')
                 .classList.add('noVNC_hidden');
-            // Add '/view' to the URL
-            history.pushState({}, '', '/view');
         } else {
             document.getElementById('noVNC_keyboard_button')
                 .classList.remove('noVNC_hidden');
