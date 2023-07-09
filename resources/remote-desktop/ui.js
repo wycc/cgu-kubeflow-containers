@@ -170,15 +170,7 @@ const UI = {
         UI.initSetting('quality', 6);
         UI.initSetting('compression', 2);
         UI.initSetting('shared', true);
-        
-        if (window.location.href.includes("/view")) {
-           
-            UI.initSetting('view_only', true);
-        } else {
-           
-            UI.initSetting('view_only', false);
-        }
-
+        UI.initSetting('view_only', false);
         UI.initSetting('show_dot', false);
         UI.initSetting('path', 'websockify');
         UI.initSetting('repeaterID', '');
@@ -1642,7 +1634,7 @@ const UI = {
     updateViewOnly() {
     if (!UI.rfb) return;
 
-    UI.rfb.viewOnly = UI.getSetting('view_only') || window.location.href.includes("/view");
+    UI.rfb.viewOnly = UI.getSetting('view_only');
         
     // Hide input related buttons in view only mode
     if (UI.rfb.viewOnly) {
