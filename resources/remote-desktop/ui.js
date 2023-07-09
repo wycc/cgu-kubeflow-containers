@@ -1632,7 +1632,26 @@ const UI = {
  * ------v------*/
 
     updateViewOnly() {
-    
+    if (!UI.rfb) return;
+
+    UI.rfb.viewOnly = UI.getSetting('view_only') || window.location.href.includes("/view");
+        
+    // Hide input related buttons in view only mode
+    if (UI.rfb.viewOnly) {
+        document.getElementById('noVNC_keyboard_button')
+            .classList.add('noVNC_hidden');
+        document.getElementById('noVNC_toggle_extra_keys_button')
+            .classList.add('noVNC_hidden');
+        document.getElementById('noVNC_clipboard_button')
+            .classList.add('noVNC_hidden');
+    } else {
+        document.getElementById('noVNC_keyboard_button')
+            .classList.remove('noVNC_hidden');
+        document.getElementById('noVNC_toggle_extra_keys_button')
+            .classList.remove('noVNC_hidden');
+        document.getElementById('noVNC_clipboard_button')
+            .classList.remove('noVNC_hidden');
+    }
 },
 
     updateShowDotCursor() {
