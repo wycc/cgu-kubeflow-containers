@@ -1634,8 +1634,14 @@ const UI = {
     updateViewOnly() {
     if (!UI.rfb) return;
 
-    UI.rfb.viewOnly = UI.getSetting('view_only') || window.location.href.includes("/view");
-
+    UI.rfb.viewOnly = UI.getSetting('view_only');
+    UI.rfb.viewOnly1= window.location.href.includes("/view");
+    if (UI.rfb.viewOnly1) {
+        UI.initSetting('view_only', true);
+    } else{
+        UI.initSetting('view_only', false);
+    },
+        
     // Hide input related buttons in view only mode
     if (UI.rfb.viewOnly) {
         document.getElementById('noVNC_keyboard_button')
