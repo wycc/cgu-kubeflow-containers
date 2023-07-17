@@ -437,23 +437,3 @@ COPY start-remote-desktop.sh /usr/local/bin/
 COPY start-remote-desktop.sh /usr/local/bin/
 
 USER $NB_USER
-
-# BEGIN MYSQL PHP TOOLS
-RUN apt-get update && \
-    apt-get install -y mysql-server php php-mysql && \
-    service mysql start && \
-    rm -rf /var/lib/apt/lists/*
-
-# Setup MySQL
-ENV MYSQL_ROOT_PASSWORD=root 
-ENV MYSQL_DATABASE=mydatabase 
-ENV MYSQL_USER=myuser 
-ENV MYSQL_PASSWORD=mypassword 
-
-RUN service mysql start && \
-    mysql -e "CREATE DATABASE ${MYSQL_DATABASE};" && \
-    mysql -e "CREATE USER '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';" && \
-    mysql -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_USER}'@'localhost';" && \
-    mysql -e "FLUSH PRIVILEGES;" && \
-    service mysql stop
-# END MYSQL PHP TOOLS
