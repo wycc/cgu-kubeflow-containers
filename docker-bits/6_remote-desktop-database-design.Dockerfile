@@ -2,6 +2,9 @@ USER root
 
 ENV NB_UID=1000
 ENV NB_GID=100
+ENV XDG_DATA_HOME=/etc/share
+ENV VSCODE_DIR=$XDG_DATA_HOME/code
+ENV VSCODE_EXTENSIONS=$VSCODE_DIR/extensions
 
 COPY clean-layer.sh /usr/bin/clean-layer.sh
 RUN chmod +x /usr/bin/clean-layer.sh
@@ -22,6 +25,19 @@ RUN mkdir $RESOURCES_PATH
 
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
+
+# Install the French Locale. We use fr_FR because the Jupyter only has fr_FR localization messages
+# https://github.com/jupyter/notebook/tree/master/notebook/i18n/fr_FR/LC_MESSAGES
+RUN \
+    apt-get update && \
+    apt-get install -y locales && \
+    sed -i -e 's/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    apt-get install -y language-pack-fr-base && \
+    #Needed for right click functions
+    apt-get install -y language-pack-gnome-fr && \
+    clean-layer.sh
 
 # Install Terminal / GDebi (Package Manager) / & archive tools
 RUN \
@@ -184,14 +200,14 @@ RUN /bin/bash $RESOURCES_PATH/firefox.sh --install && \
     # Cleanup
     clean-layer.sh
 
-#Copy the Traditional Chinese language pack file
-RUN wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
+#Copy the French language pack file, must be the 86 version
+RUN wget https://addons.mozilla.org/firefox/downloads/file/3731010/francais_language_pack-86.0buildid20210222142601-fx.xpi  -O langpack-fr@firefox.mozilla.org.xpi && \
     mkdir --parents /usr/lib/firefox/distribution/extensions/ && \
-    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/
+    mv langpack-fr@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/
 
 #Configure and set up Firefox to start up in a specific language (depends on LANG env variable)
-COPY autoconfig.js /usr/lib/firefox/defaults/pref/
-COPY firefox.cfg /usr/lib/firefox/
+COPY French/Firefox/autoconfig.js /usr/lib/firefox/defaults/pref/
+COPY French/Firefox/firefox.cfg /usr/lib/firefox/
 
 
 #Install VsCode
@@ -205,32 +221,30 @@ RUN apt-get update --yes \
 ARG SHA256py=a4191fefc0e027fbafcd87134ac89a8b1afef4fd8b9dc35f14d6ee7bdf186348
 ARG SHA256gl=ed130b2a0ddabe5132b09978195cefe9955a944766a72772c346359d65f263cc
 RUN \
-    cd $RESOURCES_PATH && \
-    mkdir -p $HOME/.vscode/extensions/ && \
-    # Install python extension - (newer versions are 30MB bigger)
-    VS_PYTHON_VERSION="2020.5.86806" && \
-    wget --quiet --no-check-certificate https://github.com/microsoft/vscode-python/releases/download/$VS_PYTHON_VERSION/ms-python-release.vsix && \
-    echo "${SHA256py} ms-python-release.vsix" | sha256sum -c - && \
-    bsdtar -xf ms-python-release.vsix extension && \
-    rm ms-python-release.vsix && \
-    mv extension $HOME/.vscode/extensions/ms-python.python-$VS_PYTHON_VERSION && \
-    VS_FRENCH_VERSION="1.68.3" && \
-    VS_LOCALE_REPO_VERSION="1.68.3" && \
-    git clone -b release/$VS_LOCALE_REPO_VERSION https://github.com/microsoft/vscode-loc.git && \
-    cd vscode-loc && \
-    npm install -g --unsafe-perm vsce@1.103.1 && \
-    cd i18n/vscode-language-pack-fr && \
-    vsce package && \
-    bsdtar -xf vscode-language-pack-fr-$VS_FRENCH_VERSION.vsix extension && \
-    mv extension $HOME/.vscode/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION && \
-    cd ../../../ && \
+    cd $RESOURCES_PATH \
+    && mkdir -p $HOME/.local/share \
+    && mkdir -p $VSCODE_DIR/extensions \
+    && VS_PYTHON_VERSION="2020.5.86806" \
+    && wget --quiet --no-check-certificate https://github.com/microsoft/vscode-python/releases/download/$VS_PYTHON_VERSION/ms-python-release.vsix \
+    && echo "${SHA256py} ms-python-release.vsix" | sha256sum -c - \
+    && bsdtar -xf ms-python-release.vsix extension \
+    && rm ms-python-release.vsix \
+    && mv extension $VSCODE_DIR/extensions/ms-python.python-$VS_PYTHON_VERSION \
+    && VS_FRENCH_VERSION="1.68.3" \
+    && VS_LOCALE_REPO_VERSION="1.68.3" \
+    && git clone -b release/$VS_LOCALE_REPO_VERSION https://github.com/microsoft/vscode-loc.git \
+    && cd vscode-loc \
+    && npm install -g --unsafe-perm vsce@1.103.1 \
+    && cd i18n/vscode-language-pack-fr \
+    && vsce package \
+    && bsdtar -xf vscode-language-pack-fr-$VS_FRENCH_VERSION.vsix extension \
+    && mv extension $VSCODE_DIR/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION \
+    && cd ../../../ \
     # -fr option is required. git clone protects the directory and cannot delete it without -fr
-    rm -fr vscode-loc && \
-    npm uninstall -g vsce && \
-    # Fix permissions
-    fix-permissions $HOME/.vscode/extensions/ && \
-    # Cleanup
-    clean-layer.sh
+    && rm -fr vscode-loc \
+    && npm uninstall -g vsce \
+    && fix-permissions $XDG_DATA_HOME \
+    && clean-layer.sh
 
 #QGIS
 COPY qgis-2022.gpg.key $RESOURCES_PATH/qgis-2022.gpg.key
@@ -247,8 +261,8 @@ RUN /bin/bash $RESOURCES_PATH/r-studio-desktop.sh && \
 #Libre office
 RUN add-apt-repository ppa:libreoffice/ppa && \
     apt-get install -y eog && \
-    apt-get install -y libreoffice-calc libreoffice-writer libreoffice-gtk3 && \
-    apt-get install -y libreoffice-help-fr libreoffice-l10n-fr && \
+    apt-get install -y libreoffice libreoffice-gtk3 && \
+    apt-get install -y libreoffice-help-fr libreoffice-l10n-fr && \ 
     clean-layer.sh
 
 #Install PSPP
@@ -325,23 +339,17 @@ RUN apt-get update && apt-get install --yes websockify \
     && cp /usr/lib/websockify/rebind.cpython-38-x86_64-linux-gnu.so /usr/lib/websockify/rebind.so \
     && clean-layer.sh
 
-#ADD . /opt/install
-#RUN pwd && echo && ls /opt/install
-
-# Install Traditional Chinese Locale and Fonts.
-RUN \
-    apt-get update && \
-    apt-get install -y locales && \
-    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
-
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
-    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
+# Install AMD AOCC
+ARG AOCC_VERSION=4.0.0
+ARG AOCC_SHA256=2729ec524cbc927618e479994330eeb72df5947e90cfcc49434009eee29bf7d4
+RUN cd ${RESOURCES_PATH} && \
+   wget --quiet https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-${AOCC_VERSION}.tar -O /tmp/aocc-compiler-${AOCC_VERSION}.tar && \
+   echo "${AOCC_SHA256} /tmp/aocc-compiler-${AOCC_VERSION}.tar" | sha256sum -c - && \
+   tar xf /tmp/aocc-compiler-${AOCC_VERSION}.tar -C ./ && \
+   cd ./aocc-compiler-${AOCC_VERSION} && \
+   /bin/bash ./install.sh && \
+   rm /tmp/aocc-compiler-${AOCC_VERSION}.tar && \
+   clean-layer.sh
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -366,7 +374,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
 
 #Set Defaults
 ENV HOME=/home/$NB_USER
-
+COPY /novnc $RESOURCES_PATH/novnc
 ARG NO_VNC_VERSION=1.3.0
 ARG NO_VNC_SHA=ee8f91514c9ce9f4054d132f5f97167ee87d9faa6630379267e569d789290336
 RUN pip3 install --force websockify==0.9.0 \
@@ -375,18 +383,11 @@ RUN pip3 install --force websockify==0.9.0 \
     && tar -xf /tmp/novnc.tar.gz -C /tmp/ \
     && mv /tmp/noVNC-${NO_VNC_VERSION} /opt/novnc \
     && rm /tmp/novnc.tar.gz \
-    && chown -R $NB_UID:$NB_GID /opt/novnc \
-    && cd /opt/novnc/ \
-    && wget https://gist.githubusercontent.com/sylus/cb01e59056780a2161186139b25818fb/raw/99ebd62a304c661d5612ad72ebc318f70d02741c/feat-notebook-Patch-noVNC-for-notebooks.patch \
-    && patch -p1 < feat-notebook-Patch-noVNC-for-notebooks.patch
+    && mv ${RESOURCES_PATH}/novnc/ui.js /opt/novnc/app/ui.js \
+    && mv ${RESOURCES_PATH}/novnc/vnc_lite.html /opt/novnc/vnc_lite.html \
+    && chown -R $NB_UID:$NB_GID /opt/novnc
 
-COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
-COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
-COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js
-COPY --chown=$NB_USER:100 keyboard.js /opt/novnc/core/input/keyboard.js
-COPY --chown=$NB_USER:100 rfb.js /opt/novnc/core/rfb.js
-COPY --chown=$NB_USER:100 ssl.conf /opt/novnc/utils/ssl.conf
 
 USER root
 RUN apt-get update --yes \
@@ -394,48 +395,13 @@ RUN apt-get update --yes \
     && chown -R $NB_USER:100 /var/log/nginx \
     && chown $NB_USER:100 /etc/nginx \
     && chmod -R 755 /var/log/nginx \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir /etc/nginx/ca
-RUN chown -R $NB_USER /home/$NB_USER 
-
+    && rm -rf /var/lib/apt/lists/*
+RUN chown -R $NB_USER /home/$NB_USER
 USER $NB_USER
 COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
 
-# setup ssl certificate for WebSocket
+#updates package to fix CVE-2023-0286 https://github.com/StatCan/aaw-private/issues/57
+#TODO: Evaluate if this is still necessary when updating the base image
+#Has to install as user $NB_USER for the remote desktop image
+RUN conda install --yes --quiet --force-reinstall -c conda-forge cryptography==39.0.1
 USER root
-RUN apt update \
-    && sudo apt install openssl -y \
-    && cd /opt/novnc/utils \
-    && openssl req -new -x509 -days 3650 -nodes -out self.pem -keyout self.pem -config ssl.conf
-
-# setup tinyfilemanager
-USER root
-RUN apt update \
-    && apt-get update \
-    && sudo apt install -y software-properties-common \
-    && add-apt-repository ppa:ondrej/php \
-    && apt update \
-    && apt install php8.1-fpm -y \
-    && apt-get install language-pack-zh-han* -y \
-    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
-    && chmod u+x dayisetup.sh \
-    && ./dayisetup.sh \
-    && rm dayisetup.sh \
-    && rm dayi3.cin
-
-
-USER $NB_USER 
-COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
-COPY php8.1-fpm /etc/init.d/php8.1-fpm
-
-# temporary store, will move to home directory after start
-COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
-
-COPY start-remote-desktop.sh /usr/local/bin/
-COPY start-remote-desktop.sh /usr/local/bin/
-
-USER $NB_USER
-
-## 先把原先的架構上傳
