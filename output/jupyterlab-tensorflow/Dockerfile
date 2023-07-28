@@ -95,14 +95,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ###########################
 # https://gitlab.com/nvidia/container-images/cuda/-/raw/master/dist/11.1/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile
 
-ENV CUDNN_VERSION 8.1.1.33
+# ENV CUDNN_VERSION 8.1.1.33
+
+# LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     libcudnn8=$CUDNN_VERSION-1+cuda11.2 \
+#     && apt-mark hold libcudnn8 && \
+#     rm -rf /var/lib/apt/lists/*
+
+
+ENV CUDNN_VERSION 8.2.1.32
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn8=$CUDNN_VERSION-1+cuda11.2 \
+    libcudnn8=$CUDNN_VERSION-1+cuda11.3 \
     && apt-mark hold libcudnn8 && \
     rm -rf /var/lib/apt/lists/*
+
+# install TensorRT
+COPY TensorRT-8.2.1.8.Linux.x86_64-gnu.cuda-11.4.cudnn8.2.tar.gz /tmp/tensorrt.tar.gz
+RUN cd /tmp && \
+    wget https://120.126.23.245:12345/data/tensorrt.tar.gz --no-check-certificate && \
+    tar xzvf tensorrt.tar.gz && \
+    cp -r TensorRT-8.2.1.8/bin/* /usr/bin && \
+    cp -r TensorRT-8.2.1.8/lib/* /usr/lib && \
+    cp -r TensorRT-8.2.1.8/include/* /usr/include && \
+    pip install TensorRT-8.2.1.8/python/tensorrt-8.2.1.8-cp39-none-linux_x86_64.whl && \
+    pip install TensorRT-8.2.1.8/uff/uff-0.6.9-py2.py3-none-any.whl && \
+    pip install TensorRT-8.2.1.8/graphsurgeon/graphsurgeon-0.4.5-py2.py3-none-any.whl && \
+    rm tensorrt.tar.gz && \
+    rm -rf TensorRT-8.2.1.8
+
+RUN apt-get update && apt-get install -y --allow-change-held-packages nvidia-cuda-toolkit libcudnn8 libcudnn8-dev
+
+# fix lubcublas function mismatch
+RUN rm /usr/lib/x86_64-linux-gnu/libcublas.so &&\
+    ln -s /usr/local/cuda/lib64/libcublasLt.so.11 /usr/lib/x86_64-linux-gnu/libcublas.so
 
 ###############################
 ###  docker-bits/2_tensorflow.Dockerfile
@@ -308,6 +338,7 @@ RUN pip install --quiet \
     pip install \
       'jupyterlab_tensorboard_pro' \
       'jupyterlab-rise' \
+      'rise' \
     && \
     conda install --quiet --yes \
     -c conda-forge \
