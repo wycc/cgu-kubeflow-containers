@@ -17,7 +17,7 @@ RUN conda run -n pytorch pip install --quiet \
         'matplotlib' \
         'gdown' \
         'opencv-python' \
-        'RISE' \
+        # 'rise' \
     && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
@@ -38,14 +38,7 @@ RUN conda run -n tensorflow pip install --quiet \
         'matplotlib' \
         'gdown' \
         'opencv-python' \
-        'RISE' \
     && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
-# fix numpy for tensorflow
-# RUN conda run -n tensorflow pip install --quiet --no-dependencies \
-#         'numpy==1.20' \
-#     && \
-#     fix-permissions $CONDA_DIR && \
-#     fix-permissions /home/$NB_USER

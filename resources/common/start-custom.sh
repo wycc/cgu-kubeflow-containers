@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # move conda env to home directory to keep packages data
-if [ ! -d /home/jovyan/envs ]; then
-  cp -a /opt/conda/envs/ /home/jovyan/envs/
-  mv  /opt/conda/envs /opt/conda/envs.old
-  ln -s /home/jovyan/envs /opt/conda
+if [ ! -d /home/jovyan/conda ]; then
+  mv /opt/conda/ /home/jovyan/conda/
 fi
+# move origin conda directory to not used directory
+mv /opt/conda /opt/conda2
+ln -s /home/jovyan/conda /opt
 
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "--------------------Starting up--------------------"
+
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then
   while ! curl -s -f http://127.0.0.1:15020/healthz/ready; do sleep 1; done
 fi
@@ -80,6 +81,42 @@ if [ -d $RESOURCES_PATH/desktop-files ]; then
     mkdir -p $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
     cp /opt/install/desktop-files/.config/xfce4/xfce4-panel.xml $HOME/.config/xfce4/xfconf/xfce-perchannel-xml/
 
+    if [ -d /opt/lampp/ ]; then
+        # 確保 $HOME/lampp/ 存在
+        mkdir -p $HOME/lampp
+        # 對於 logs 資料夾
+        if [ -d /opt/lampp/logs/ ]; then
+            if [ ! -d "$HOME/lampp/logs" ]; then
+                cp -a /opt/lampp/logs $HOME/lampp
+            fi
+            mv /opt/lampp/logs /opt/lampp/logs.old
+            ln -sfT $HOME/lampp/logs/ /opt/lampp/logs
+        fi
+        # 對於 phpmyadmin 資料夾
+        if [ -d /opt/lampp/phpmyadmin/ ]; then
+            if [ ! -d "$HOME/lampp/phpmyadmin" ]; then
+                cp -a /opt/lampp/phpmyadmin $HOME/lampp
+            fi
+            mv /opt/lampp/phpmyadmin /opt/lampp/phpmyadmin.old
+            ln -sfT $HOME/lampp/phpmyadmin/ /opt/lampp/phpmyadmin
+        fi
+        # 對於 temp 資料夾
+        if [ -d /opt/lampp/temp/ ]; then
+            if [ ! -d "$HOME/lampp/temp" ]; then
+                cp -a /opt/lampp/temp $HOME/lampp
+            fi
+            mv /opt/lampp/temp /opt/lampp/temp.old
+            ln -sfT $HOME/lampp/temp/ /opt/lampp/temp
+        fi
+        # 對於 var 資料夾
+        if [ -d /opt/lampp/var/ ]; then
+            if [ ! -d "$HOME/lampp/var" ]; then
+                cp -a /opt/lampp/var $HOME/lampp
+            fi
+            mv /opt/lampp/var /opt/lampp/var.old
+            ln -sfT $HOME/lampp/var/ /opt/lampp/var
+        fi
+    fi
     if [ -d /opt/catkin_ws/ ]; then
         . /opt/ros/noetic/setup.bash
         mkdir -p $HOME/catkin_ws

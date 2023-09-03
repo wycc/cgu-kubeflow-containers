@@ -16,6 +16,7 @@ DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
 ml-CUDA        := 11.1
+monai-CUDA        := 11.1
 remote-desktop-CUDA := 11.1
 remote-desktop-ros-CUDA := 11.1
 
@@ -64,6 +65,7 @@ get-docker-stacks-upstream-tag:
 generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh $(TensorFlow-CUDA) > $(SRC)/1_CUDA-$(TensorFlow-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(ml-CUDA) > $(SRC)/1_CUDA-$(ml-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(monai-CUDA) > $(SRC)/1_CUDA-$(monai-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(all-CUDA) > $(SRC)/1_CUDA-$(all-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
@@ -89,7 +91,7 @@ generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-
 # Configure the "Bases".
 #
 # Revert Stan's change made in PR#306 that includes $(SRC)/2_cpu.Dockerfile It really balloons the size of the image
-pytorch tensorflow ml: .output
+pytorch tensorflow ml monai: .output
 	$(CAT) \
 		$(SRC)/0_cpu.Dockerfile \
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
@@ -153,6 +155,23 @@ jupyterlab: pytorch tensorflow ml cpu
 		>   $(OUT)/$@-$${type}/Dockerfile; \
 	done
 
+# create monai
+medical: monai
+
+	for type in $^; do \
+		mkdir -p $(OUT)/$@-$${type}; \
+		cp -r resources/common/. $(OUT)/$@-$${type}/; \
+		$(CAT) \
+			$(TMP)/$${type}.Dockerfile \
+			$(SRC)/3_Kubeflow.Dockerfile \
+			$(SRC)/4_CLI.Dockerfile \
+			$(SRC)/5_DB-Drivers.Dockerfile \
+			$(SRC)/6_$(@).Dockerfile \
+			$(SRC)/7_remove_vulnerabilities.Dockerfile \
+			$(SRC)/∞_CMD.Dockerfile \
+		>   $(OUT)/$@-$${type}/Dockerfile; \
+	done
+
 # Remote Desktop
 remote-desktop:
 	mkdir -p $(OUT)/$@
@@ -184,6 +203,23 @@ remote-desktop-ros:
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
 		$(SRC)/6_remote-desktop-ros.Dockerfile \
+		$(SRC)/7_remove_vulnerabilities.Dockerfile \
+		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
+	>   $(OUT)/$@/Dockerfile
+
+# Remote Desktop for database-design
+remote-desktop-database-design:
+	mkdir -p $(OUT)/$@
+	echo "REMOTE DESKTOP DATABASE DESIGN"
+	cp -r scripts/remote-desktop $(OUT)/$@
+	cp -r resources/common/. $(OUT)/$@
+	cp -r resources/remote-desktop/. $(OUT)/$@
+
+	$(CAT) \
+		$(SRC)/0_Rocker.Dockerfile \
+		$(SRC)/3_Kubeflow.Dockerfile \
+		$(SRC)/4_CLI.Dockerfile \
+		$(SRC)/6_remote-desktop-database-design.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
