@@ -2,8 +2,8 @@
 
 # move conda env to home directory to keep packages data
 if [ ! -d /home/jovyan/envs ]; then
-  mv /opt/conda/envs/ /home/jovyan/envs/
-  rm -rf /opt/conda/envs
+  cp -a /opt/conda/envs/ /home/jovyan/envs/
+  mv  /opt/conda/envs /opt/conda/envs.old
   ln -s /home/jovyan/envs /opt/conda
 fi
 
