@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=XAMPP Control Panel
+Exec=/opt/lampp/manager-linux-x64.run
+Icon=/resources/xampp.png
+
+Type=Application
+Categories=Utility;Application;

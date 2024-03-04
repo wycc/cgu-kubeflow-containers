@@ -1,12 +1,32 @@
 #!/bin/bash
 
 # move conda env to home directory to keep packages data
-if [ ! -d /home/jovyan/conda ]; then
-  mv /opt/conda/ /home/jovyan/conda/
+echo "--------------------Do we need to copy files?--------------------"
+if [ ! -f /etc/conda_disable_copy ]; then
+  if [ ! -d /home/jovyan/envs ]; then
+    echo "--------------------Copy files now--------------------"
+    cp -a /opt/conda/envs /home/jovyan/conda/envs
+  fi
+else 
+  if [ ! -f /home/jovyan/enable_persistent.ipynb ]; then
+    (cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/master/resources/common/enable_persistent.ipynb)
+  fi
 fi
-# move origin conda directory to not used directory
-mv /opt/conda /opt/conda2
-ln -s /home/jovyan/conda /opt
+
+if [ -d /home/jovyan/envs/tensorflow ]; then
+  # move origin conda directory to not used directory
+  echo "--------------------build symbolic links for tensorflow--------------------"
+  mv /opt/conda/envs/tensorflow /opt/conda/tensorflow.old
+  ln -s /home/jovyan/envs/tensorflow /opt/conda/envs
+fi
+
+if [ -d /home/jovyan/envs/pytorch ]; then
+  # move origin conda directory to not used directory
+  echo "--------------------build symbolic links for pytorch--------------------" 
+  mv /opt/conda/envs/pytorch /opt/conda/pytorch.old
+  ln -s /home/jovyan/envs/pytorch /opt/conda/envs
+fi
+
 
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then

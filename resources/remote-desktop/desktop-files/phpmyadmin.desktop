@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Name=phpMyAdmin
+Exec=firefox /opt/lampp/htdocs/phpmyadmin
+Icon=/resources/PhpMyAdmin.png
+Type=Application
+Categories=Utility;Application;

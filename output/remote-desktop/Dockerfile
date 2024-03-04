@@ -571,8 +571,8 @@ COPY php8.1-fpm /etc/init.d/php8.1-fpm
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
 
-COPY start-remote-desktop.sh /usr/local/bin/
-COPY start-remote-desktop.sh /usr/local/bin/
+# COPY start-remote-desktop.sh /usr/local/bin/
+COPY setup_catkin_ws.sh /usr/local/bin/
 
 USER $NB_USER
 

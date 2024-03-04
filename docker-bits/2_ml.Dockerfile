@@ -42,3 +42,4 @@ RUN conda run -n tensorflow pip install --quiet \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
+ENV CONDA_COPY yes

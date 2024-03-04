@@ -119,16 +119,17 @@ if [ -d $RESOURCES_PATH/desktop-files ]; then
     fi
     if [ -d /opt/catkin_ws/ ]; then
         . /opt/ros/noetic/setup.bash
-        mkdir -p $HOME/catkin_ws
-        mv /opt/catkin_ws/src $HOME/catkin_ws
-        mv /opt/catkin_ws/devel $HOME/catkin_ws
-        mv /opt/catkin_ws/build $HOME/catkin_ws
-        cd $HOME/catkin_ws && catkin_make
-        echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-        cd $HOME/catkin_ws && catkin_make && . devel/setup.bash
-        echo "export TURTLEBOT3_MODEL=waffle_pi" >> ~/.bashrc
-        echo "export CUDA_CACHE_MAXSIZE=4294967296" >> ~/.bashrc
-
+        if [ ! -d $HOME/catkin_ws ]; then
+            mkdir -p $HOME/catkin_ws
+            mv /opt/catkin_ws/src $HOME/catkin_ws
+            mv /opt/catkin_ws/devel $HOME/catkin_ws
+            mv /opt/catkin_ws/build $HOME/catkin_ws
+            cd $HOME/catkin_ws && catkin_make
+            echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+            cd $HOME/catkin_ws && catkin_make && . devel/setup.bash
+            echo "export TURTLEBOT3_MODEL=waffle_pi" >> ~/.bashrc
+            echo "export CUDA_CACHE_MAXSIZE=4294967296" >> ~/.bashrc
+        fi
     fi
 fi
 

@@ -16,9 +16,13 @@ DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
 ml-CUDA        := 11.1
+mlnocopy-CUDA        := 11.1
 monai-CUDA        := 11.1
+computer-CUDA        := 11.1
 remote-desktop-CUDA := 11.1
 remote-desktop-ros-CUDA := 11.1
+remote-desktop-ros-eng-CUDA := 11.1
+newmonai-CUDA        := 11.1
 
 # https://stackoverflow.com/questions/5917413/concatenate-multiple-files-but-include-filename-as-section-headers
 CAT := awk '(FNR==1){print "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n\#\#\#  " FILENAME "\n\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n"}1'
@@ -65,11 +69,17 @@ get-docker-stacks-upstream-tag:
 generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh $(TensorFlow-CUDA) > $(SRC)/1_CUDA-$(TensorFlow-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(ml-CUDA) > $(SRC)/1_CUDA-$(ml-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(mlnocopy-CUDA) > $(SRC)/1_CUDA-$(mlnocopy-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(monai-CUDA) > $(SRC)/1_CUDA-$(monai-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(newmonaimonai-CUDA) > $(SRC)/1_CUDA-$(newmonai-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(computer-CUDA) > $(SRC)/1_CUDA-$(computer-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(all-CUDA) > $(SRC)/1_CUDA-$(all-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-CUDA).Dockerfile
+	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-ENG-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-ENG-CUDA).Dockerfile
+
+
 
 generate-Spark:
 	bash scripts/get-spark-stuff.sh --commit $(COMMIT)  > $(SRC)/2_Spark.Dockerfile
@@ -91,7 +101,7 @@ generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-
 # Configure the "Bases".
 #
 # Revert Stan's change made in PR#306 that includes $(SRC)/2_cpu.Dockerfile It really balloons the size of the image
-pytorch tensorflow ml monai: .output
+pytorch tensorflow ml mlnocopy monai computer newmonai : .output
 	$(CAT) \
 		$(SRC)/0_cpu.Dockerfile \
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
@@ -139,7 +149,7 @@ sas:
 	>   $(OUT)/$@/Dockerfile
 
 # create directories for current images
-jupyterlab: pytorch tensorflow ml cpu
+jupyterlab: pytorch tensorflow ml mlnocopy cpu
 
 	for type in $^; do \
 		mkdir -p $(OUT)/$@-$${type}; \
@@ -172,6 +182,40 @@ medical: monai
 		>   $(OUT)/$@-$${type}/Dockerfile; \
 	done
 
+# create monai
+newmedical: newmonai
+
+	for type in $^; do \
+		mkdir -p $(OUT)/$@-$${type}; \
+		cp -r resources/common/. $(OUT)/$@-$${type}/; \
+		$(CAT) \
+			$(TMP)/$${type}.Dockerfile \
+			$(SRC)/3_Kubeflow.Dockerfile \
+			$(SRC)/4_CLI.Dockerfile \
+			$(SRC)/5_DB-Drivers.Dockerfile \
+			$(SRC)/6_$(@).Dockerfile \
+			$(SRC)/7_remove_vulnerabilities.Dockerfile \
+			$(SRC)/∞_CMD.Dockerfile \
+		>   $(OUT)/$@-$${type}/Dockerfile; \
+	done
+
+# create cv
+cvma: computer
+
+	for type in $^; do \
+		mkdir -p $(OUT)/$@-$${type}; \
+		cp -r resources/common/. $(OUT)/$@-$${type}/; \
+		$(CAT) \
+			$(TMP)/$${type}.Dockerfile \
+			$(SRC)/3_Kubeflow.Dockerfile \
+			$(SRC)/4_CLI.Dockerfile \
+			$(SRC)/5_DB-Drivers.Dockerfile \
+			$(SRC)/6_$(@).Dockerfile \
+			$(SRC)/7_remove_vulnerabilities.Dockerfile \
+			$(SRC)/∞_CMD.Dockerfile \
+		>   $(OUT)/$@-$${type}/Dockerfile; \
+	done
+
 # Remote Desktop
 remote-desktop:
 	mkdir -p $(OUT)/$@
@@ -188,7 +232,23 @@ remote-desktop:
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
-	
+
+remote-desktop-eng:
+	mkdir -p $(OUT)/$@
+	echo "REMOTE DESKTOP ENG"
+	cp -r scripts/remote-desktop $(OUT)/$@
+	cp -r resources/common/. $(OUT)/$@
+	cp -r resources/remote-desktop/. $(OUT)/$@
+
+	$(CAT) \
+		$(SRC)/0_Rocker.Dockerfile \
+		$(SRC)/3_Kubeflow.Dockerfile \
+		$(SRC)/4_CLI.Dockerfile \
+		$(SRC)/6_remote-desktop-eng.Dockerfile \
+		$(SRC)/7_remove_vulnerabilities.Dockerfile \
+		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
+	>   $(OUT)/$@/Dockerfile
+
 # Remote Desktop for ROS
 remote-desktop-ros:
 	mkdir -p $(OUT)/$@
@@ -203,6 +263,23 @@ remote-desktop-ros:
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
 		$(SRC)/6_remote-desktop-ros.Dockerfile \
+		$(SRC)/7_remove_vulnerabilities.Dockerfile \
+		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
+	>   $(OUT)/$@/Dockerfile
+
+remote-desktop-ros-eng:
+	mkdir -p $(OUT)/$@
+	echo "REMOTE DESKTOP ROS ENG"
+	cp -r scripts/remote-desktop $(OUT)/$@
+	cp -r resources/common/. $(OUT)/$@
+	cp -r resources/remote-desktop/. $(OUT)/$@
+
+	$(CAT) \
+		$(SRC)/0_Rocker.Dockerfile \
+		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
+		$(SRC)/3_Kubeflow.Dockerfile \
+		$(SRC)/4_CLI.Dockerfile \
+		$(SRC)/6_remote-desktop-ros-eng.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile

@@ -105,64 +105,54 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #     rm -rf /var/lib/apt/lists/*
 
 
-ENV CUDNN_VERSION 8.2.1.32
+ENV CUDNN_VERSION 8.1.1.33
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn8=$CUDNN_VERSION-1+cuda11.3 \
+    libcudnn8=$CUDNN_VERSION-1+cuda11.2 \
     && apt-mark hold libcudnn8 && \
     rm -rf /var/lib/apt/lists/*
 
 # install TensorRT
-COPY TensorRT-8.2.1.8.Linux.x86_64-gnu.cuda-11.4.cudnn8.2.tar.gz /tmp/tensorrt.tar.gz
-RUN cd /tmp && \
-    wget https://120.126.23.245:12345/data/tensorrt.tar.gz --no-check-certificate && \
-    tar xzvf tensorrt.tar.gz && \
-    cp -r TensorRT-8.2.1.8/bin/* /usr/bin && \
-    cp -r TensorRT-8.2.1.8/lib/* /usr/lib && \
-    cp -r TensorRT-8.2.1.8/include/* /usr/include && \
-    pip install TensorRT-8.2.1.8/python/tensorrt-8.2.1.8-cp39-none-linux_x86_64.whl && \
-    pip install TensorRT-8.2.1.8/uff/uff-0.6.9-py2.py3-none-any.whl && \
-    pip install TensorRT-8.2.1.8/graphsurgeon/graphsurgeon-0.4.5-py2.py3-none-any.whl && \
-    rm tensorrt.tar.gz && \
-    rm -rf TensorRT-8.2.1.8
+#RUN cd /tmp && \
+#    wget https://120.126.23.245:12345/data/tensorrt.tar.gz --no-check-certificate && \
+#    tar xzvf tensorrt.tar.gz && \
+#    cp -r TensorRT-8.2.5.1/bin/* /usr/bin && \
+#    cp -r TensorRT-8.2.5.1/lib/* /usr/lib && \
+#    cp -r TensorRT-8.2.5.1/include/* /usr/include && \
+#    pip install TensorRT-8.2.5.1/python/tensorrt-8.2.5.1-cp39-none-linux_x86_64.whl && \
+#    pip install TensorRT-8.2.5.1/uff/uff-0.6.9-py2.py3-none-any.whl && \
+#    pip install TensorRT-8.2.5.1/graphsurgeon/graphsurgeon-0.4.5-py2.py3-none-any.whl && \
+#    rm tensorrt.tar.gz && \
+#    rm -rf TensorRT-8.2.5.1
 
-RUN apt-get update && apt-get install -y --allow-change-held-packages nvidia-cuda-toolkit libcudnn8 libcudnn8-dev
+#RUN apt-get update && apt-get install -y --allow-change-held-packages nvidia-cuda-toolkit libcudnn8 libcudnn8-dev
 
 # fix lubcublas function mismatch
-RUN rm /usr/lib/x86_64-linux-gnu/libcublas.so &&\
-    ln -s /usr/local/cuda/lib64/libcublasLt.so.11 /usr/lib/x86_64-linux-gnu/libcublas.so
+#RUN rm /usr/lib/x86_64-linux-gnu/libcublas.so &&\
+#    ln -s /usr/local/cuda/lib64/libcublasLt.so.11 /usr/lib/x86_64-linux-gnu/libcublas.so
 
 ###############################
 ###  docker-bits/2_pytorch.Dockerfile
 ###############################
 
-
-RUN conda create -n torch python=3.9 && \
-   conda install -n torch --quiet --yes -c pytorch \
-     'pytorch==1.12.1' \
-     'torchvision==0.13.1' \
-     'torchaudio==0.12.1' \
-     'ipykernel==6.21.3' \
-     'torchtext==0.13.1' \
-   && \
-   conda clean --all -f -y && \
-   fix-permissions $CONDA_DIR && \
-   fix-permissions /home/$NB_USER
-
-# Install common package
-RUN source /opt/conda/bin/activate torch && \ 
-    pip install --quiet \
-        # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
-        'gradio' \
-        'matplotlib' \
-        'gdown' \
-        'opencv-python' \
-    && \
-    fix-permissions $CONDA_DIR && \
+# 安裝PyTorch
+RUN pip install --quiet \
+    'torch==1.12.1' \
+    'torchvision==0.13.1' \
+    'torchaudio==0.12.1' \
+    'ipykernel==6.21.3' \
+    'jupyterlab_tensorboard_pro' \
+    'tensorboard==2.13.0' \
+    'matplotlib' \
+    'RISE' \
+    'ipyvolume' \
+    'gdown' \
+    'tqdm' \
+    'opencv-python' \
+    && fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
-
 
 ###############################
 ###  docker-bits/3_Kubeflow.Dockerfile
@@ -412,6 +402,8 @@ RUN pip install --quiet \
         'gradio' \
         'matplotlib' \
         'gdown' \
+        'RISE' \
+        'ipyvolume' \
         'opencv-python' \
     && \
     fix-permissions $CONDA_DIR && \
@@ -467,4 +459,5 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 
 USER root
 ENTRYPOINT ["tini", "--"]
+# change the start script
 CMD ["start-custom.sh"]

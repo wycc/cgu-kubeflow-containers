@@ -25,4 +25,5 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 
 USER root
 ENTRYPOINT ["tini", "--"]
+# change the start script
 CMD ["start-custom.sh"]

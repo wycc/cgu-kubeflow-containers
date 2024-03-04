@@ -269,6 +269,8 @@ RUN pip install --quiet \
         'gradio' \
         'matplotlib' \
         'gdown' \
+        'RISE' \
+        'ipyvolume' \
         'opencv-python' \
     && \
     fix-permissions $CONDA_DIR && \
@@ -458,4 +460,5 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 
 USER root
 ENTRYPOINT ["tini", "--"]
+# change the start script
 CMD ["start-custom.sh"]

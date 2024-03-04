@@ -1,6 +1,6 @@
 # Install Tensorflow
 RUN pip install --quiet \
-        'tensorflow==2.5.0' \
+        'tensorflow==2.8.2' \
         'keras' \
         'ipykernel==6.21.3' \
         'jupyterlab_tensorboard_pro' \
@@ -13,6 +13,8 @@ RUN pip install --quiet \
         # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
         'gradio' \
         'matplotlib' \
+        'RISE' \
+        'ipyvolume' \
         'gdown' \
         'opencv-python' \
     && \
