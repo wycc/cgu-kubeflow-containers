@@ -5,7 +5,6 @@
  *
  * See README.md for usage and integration instructions.
  */
-
 import * as Log from '../core/util/logging.js';
 import _, { l10n } from './localization.js';
 import { isTouchDevice, isSafari, hasScrollbarGutter, dragThreshold }
@@ -18,6 +17,112 @@ import RFB from "../core/rfb.js";
 import * as WebUtil from "./webutil.js";
 
 const PAGE_TITLE = "noVNC";
+let port;
+class LineBreakTransformer {
+      constructor() {
+        this.chunks = "";
+      }
+
+      transform(chunk, controller) {
+        this.chunks += chunk;
+        const lines = this.chunks.split("\r\n");
+        this.chunks = lines.pop();
+        lines.forEach((line) => controller.enqueue(line));
+      }
+
+      flush(controller) {
+        controller.enqueue(this.chunks);
+      }
+  }
+async function onStartButtonClick() {
+    try {
+	    port.close();
+    } catch(e) {
+    }
+    try {
+      port = await navigator.serial.requestPort();
+      console.log("req");
+      await port.open({ baudRate: 9600,       
+                        dataBits: 8,
+                        stopBits: 1,
+                        parity: "none",
+                        flowControl: "none",
+      });
+    } catch(e) {
+	    return;
+    }
+    const {usbProductId, usbVendorId}=port.getInfo();
+    //document.getElementById("sdata").innerHTML=usbProductId+" "+ " <br>"+usbVendorId;
+    
+    console.log("opanning");
+    
+        
+                        
+
+    const writer = port.writable.getWriter();
+    console.log("true is");
+    const data = new Uint8Array([0x32]); 
+
+    await writer.write(data);
+    console.log("succ");
+
+
+    writer.releaseLock();
+    const textDecoder = new TextDecoderStream();
+
+    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    var reader = textDecoder.readable
+        .pipeThrough(new TransformStream(new LineBreakTransformer()))
+        .getReader();
+    console.log("portreadable");
+    function read_once(reader,port) {
+        try {
+            console.log('before read');
+	    var to = setTimeout(function() {
+		try {
+	            reader.cancel();
+		} catch(e) {
+		}
+	    },2000);
+            reader.read().then(function(r) {
+		console.log("tryfun");
+	        var value = r['value'];
+	        if (value == null) {
+		    //reader.releaseLock();
+                    //reader = textDecoder.readable
+                    //    .pipeThrough(new TransformStream(new LineBreakTransformer()))
+                    //    .getReader();
+                    console.log("reopen");
+		    read_once(reader,port);
+		    return;
+		}
+		console.log(value);
+		// use RFB to relay the message to websocketfy daemon
+		if (UI.serialws) {
+		    var i;
+		    var data = new Uint8Array(value.length);
+		    for(i=0;i<value.length;i++) {
+		        data[i] = value.charCodeAt(i);
+		    }
+		    UI.serialws.send(data);
+		}
+		clearTimeout(to);
+		if (r['done'] == false) {
+			setTimeout(function() {
+			    read_once(reader,port);
+			} ,100);
+		}
+	    });
+        } catch (error) {
+          console.log("Error: Read");
+          console.log(error);
+	}
+    }
+    setTimeout(function() {
+	read_once(reader,port);
+    } ,100);
+}
+
 
 const UI = {
 
@@ -52,7 +157,34 @@ const UI = {
             });
         });
     },
+    serial_init() {
+            let serialws = new WebSocket('wss://'+window.location.host+window.location.pathname+'serial');
 
+            serialws.onopen = function() {
+		    console.log('connected');
+            };
+
+            serialws.onmessage = function(event) {
+		    var reader = new FileReader();
+		    reader.onload = () => {
+			    console.log(reader.result);
+		    	    console.log( 'Received: ' + reader.result +'\n');
+    			    const data = new Uint8Array([0x32]); 
+			    serialws.send(data);
+		    };
+		    reader.readAsText(event.data);
+            };
+
+            serialws.onclose = function() {
+		    console.log('closed');
+
+            };
+
+            serialws.onerror = function(error) {
+                    console.log('Error: ' + error.message + '\n');
+            };
+	    UI.serialws = serialws;
+    },
     // Render default UI and initialize settings menu
     start() {
 
@@ -121,6 +253,7 @@ const UI = {
             // Show the connect panel on first load unless autoconnecting
             UI.openConnectPanel();
         }
+	UI.serial_init();
         
         return Promise.resolve(UI.rfb);
     },
@@ -170,13 +303,7 @@ const UI = {
         UI.initSetting('quality', 6);
         UI.initSetting('compression', 2);
         UI.initSetting('shared', true);
-
-        if (window.location.href.includes("/view")){
-            UI.initSetting('view_only', true);
-        } else{
-            UI.initSetting('view_only', false);
-        }
-        
+        UI.initSetting('view_only', false);
         UI.initSetting('show_dot', false);
         UI.initSetting('path', 'websockify');
         UI.initSetting('repeaterID', '');
@@ -372,6 +499,10 @@ const UI = {
         UI.addSettingChangeHandler('logging', UI.updateLogging);
         UI.addSettingChangeHandler('reconnect');
         UI.addSettingChangeHandler('reconnect_delay');
+        document.querySelector('#noVNC_setting_serial').addEventListener('click', function() {
+		onStartButtonClick();
+	});
+	
     },
 
     addFullscreenHandlers() {
@@ -1638,27 +1769,26 @@ const UI = {
  * ------v------*/
 
     updateViewOnly() {
-    if (!UI.rfb) return;
+        if (!UI.rfb) return;
+        UI.rfb.viewOnly = UI.getSetting('view_only');
 
-    UI.rfb.viewOnly = UI.getSetting('view_only') || window.location.href.includes("/view");
-        
-    // Hide input related buttons in view only mode
-    if (UI.rfb.viewOnly) {
-        document.getElementById('noVNC_keyboard_button')
-            .classList.add('noVNC_hidden');
-        document.getElementById('noVNC_toggle_extra_keys_button')
-            .classList.add('noVNC_hidden');
-        document.getElementById('noVNC_clipboard_button')
-            .classList.add('noVNC_hidden');
-    } else {
-        document.getElementById('noVNC_keyboard_button')
-            .classList.remove('noVNC_hidden');
-        document.getElementById('noVNC_toggle_extra_keys_button')
-            .classList.remove('noVNC_hidden');
-        document.getElementById('noVNC_clipboard_button')
-            .classList.remove('noVNC_hidden');
-    }
-},
+        // Hide input related buttons in view only mode
+        if (UI.rfb.viewOnly) {
+            document.getElementById('noVNC_keyboard_button')
+                .classList.add('noVNC_hidden');
+            document.getElementById('noVNC_toggle_extra_keys_button')
+                .classList.add('noVNC_hidden');
+            document.getElementById('noVNC_clipboard_button')
+                .classList.add('noVNC_hidden');
+        } else {
+            document.getElementById('noVNC_keyboard_button')
+                .classList.remove('noVNC_hidden');
+            document.getElementById('noVNC_toggle_extra_keys_button')
+                .classList.remove('noVNC_hidden');
+            document.getElementById('noVNC_clipboard_button')
+                .classList.remove('noVNC_hidden');
+        }
+    },
 
     updateShowDotCursor() {
         if (!UI.rfb) return;

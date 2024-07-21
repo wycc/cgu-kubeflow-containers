@@ -179,6 +179,10 @@ trap "rm -f $VNC_SOCKET" EXIT
 vncserver -SecurityTypes None -rfbunixpath $VNC_SOCKET -geometry 1680x1050 :1
 cat $HOME/.vnc/*.log
 
+(socat -d -d PTY,link=/dev/ttyS0,waitslave,echo=0,raw,unlink-close=0 TCP-LISTEN:5680,reuseaddr,fork) &
+(/usr/bin/python3 /usr/local/bin/websockify --cert /opt/novnc/utils/self.pem 5679 127.0.0.1:5680) &
+
+
 echo "novnc has been configured, launching novnc"
 #TODO: Investigate adding vscode extensions to be persisted
 # Launch noVNC
