@@ -335,7 +335,7 @@ COPY firefox.cfg /usr/lib/firefox/
 #Install VsCode
 RUN apt-get update --yes \
     && apt-get install --yes nodejs npm \
-    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install \
+    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install  \
     && clean-layer.sh
 
 # Install Visual Studio Code extensions

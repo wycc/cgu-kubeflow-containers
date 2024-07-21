@@ -423,7 +423,7 @@ RUN pip3 install --force websockify==0.9.0 \
 COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
 COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
-COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js
+COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js 
 COPY --chown=$NB_USER:100 keyboard.js /opt/novnc/core/input/keyboard.js
 COPY --chown=$NB_USER:100 rfb.js /opt/novnc/core/rfb.js
 COPY --chown=$NB_USER:100 ssl.conf /opt/novnc/utils/ssl.conf
@@ -454,7 +454,8 @@ RUN apt update \
     && sudo apt install -y software-properties-common \
     && add-apt-repository ppa:ondrej/php \
     && apt update \
-    && apt install php8.1-fpm -y
+    && apt install php8.1-fpm -y \
+    && apt install minicom socat -y
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
 COPY php8.1-fpm /etc/init.d/php8.1-fpm

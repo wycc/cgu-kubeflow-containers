@@ -6,6 +6,10 @@ set -e
 SHA256=0e84eedab8b1fca67597c03303185504d40da93b4953d73c7f4ef8a8df8e3eb8
 VERSION=1.74.3
 
+SHA256=3340b2649e486adfde2452418599acb64c1dc3998087d715d244f10302a89b94
+VERSION=1.87.2
+
+
 if [ ! -f "/usr/share/code/code" ]; then
     echo "Installing VS Code. Please wait..."
     cd $RESOURCES_PATH

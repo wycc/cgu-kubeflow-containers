@@ -15,6 +15,7 @@ DOCKER-STACKS-UPSTREAM-TAG := ed2908bbb62e
 
 tensorflow-CUDA := 11.1
 pytorch-CUDA    := 11.1
+newpytorch-CUDA    := 11.6
 ml-CUDA        := 11.1
 mlnocopy-CUDA        := 11.1
 monai-CUDA        := 11.1
@@ -78,7 +79,7 @@ generate-CUDA:
 	bash scripts/get-nvidia-stuff.sh    $(PyTorch-CUDA) > $(SRC)/1_CUDA-$(PyTorch-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-CUDA).Dockerfile
 	bash scripts/get-nvidia-stuff.sh    $(Remote-Desktop-ROS-ENG-CUDA) > $(SRC)/1_CUDA-$(Remote-Desktop-ROS-ENG-CUDA).Dockerfile
-
+	bash scripts/get-nvidia-stuff.sh    $(newPyTorch-CUDA) > $(SRC)/1_CUDA-$(newPyTorch-CUDA).Dockerfile
 
 
 generate-Spark:
@@ -102,6 +103,13 @@ generate-dockerfiles: clean jupyterlab rstudio remote-desktop sas docker-stacks-
 #
 # Revert Stan's change made in PR#306 that includes $(SRC)/2_cpu.Dockerfile It really balloons the size of the image
 pytorch tensorflow ml mlnocopy monai computer newmonai : .output
+	$(CAT) \
+		$(SRC)/0_cpu.Dockerfile \
+		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
+		$(SRC)/2_$@.Dockerfile \
+	> $(TMP)/$@.Dockerfile
+
+newpytorch : .output
 	$(CAT) \
 		$(SRC)/0_cpu.Dockerfile \
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
@@ -151,6 +159,22 @@ sas:
 # create directories for current images
 jupyterlab: pytorch tensorflow ml mlnocopy cpu
 
+	for type in $^; do \
+		mkdir -p $(OUT)/$@-$${type}; \
+		cp -r resources/common/. $(OUT)/$@-$${type}/; \
+		$(CAT) \
+			$(TMP)/$${type}.Dockerfile \
+			$(SRC)/3_Kubeflow.Dockerfile \
+			$(SRC)/4_CLI.Dockerfile \
+			$(SRC)/5_DB-Drivers.Dockerfile \
+			$(SRC)/6_$(@).Dockerfile \
+			$(SRC)/7_remove_vulnerabilities.Dockerfile \
+			$(SRC)/∞_CMD.Dockerfile \
+		>   $(OUT)/$@-$${type}/Dockerfile; \
+	done
+
+# new
+newlab: newpytorch
 	for type in $^; do \
 		mkdir -p $(OUT)/$@-$${type}; \
 		cp -r resources/common/. $(OUT)/$@-$${type}/; \

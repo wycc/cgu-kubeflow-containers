@@ -7,26 +7,23 @@ if [ ! -f /etc/conda_disable_copy ]; then
     echo "--------------------Copy files now--------------------"
     cp -a /opt/conda/envs /home/jovyan/conda/envs
   fi
-else 
+else
   if [ ! -f /home/jovyan/enable_persistent.ipynb ]; then
     (cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/master/resources/common/enable_persistent.ipynb)
   fi
 fi
 
 if [ -d /home/jovyan/envs/tensorflow ]; then
-  # move origin conda directory to not used directory
-  echo "--------------------build symbolic links for tensorflow--------------------"
-  mv /opt/conda/envs/tensorflow /opt/conda/tensorflow.old
-  ln -s /home/jovyan/envs/tensorflow /opt/conda/envs
+  echo "--------------------build symbolic links for tensorflow --------------------"
+  mv /opt/conda/envs /opt/conda/envs.old
+  ln -s /home/jovyan/envs /opt/conda/envs
 fi
 
 if [ -d /home/jovyan/envs/pytorch ]; then
-  # move origin conda directory to not used directory
-  echo "--------------------build symbolic links for pytorch--------------------" 
-  mv /opt/conda/envs/pytorch /opt/conda/pytorch.old
-  ln -s /home/jovyan/envs/pytorch /opt/conda/envs
+  echo "--------------------build symbolic links for pytorch --------------------"
+  mv /opt/conda/envs /opt/conda/envs.old 
+  ln -s /home/jovyan/envs /opt/conda/envs
 fi
-
 
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then
@@ -150,6 +147,7 @@ if [[ -f "$HOME/.condarc" ]]; then
 else
   echo "Creating basic .condarc file"
   printf 'envs_dirs:\n  - $HOME/.conda/envs' > $HOME/.condarc
+  mkdir -p $HOME/.conda/envs
 fi
 
 
@@ -157,10 +155,24 @@ printenv | grep KUBERNETES >> /opt/conda/lib/R/etc/Renviron
 
 VS_CODE_SETTINGS=/etc/share/code-server/Machine/settings.json
 VS_CODE_PRESISTED=$HOME/.local/share/code-server/Machine/settings.json
-if [-f "$VS_CODE_PRESISTED" ]; then
+if [ -f "$VS_CODE_PRESISTED" ]; then
   cp "$VS_CODE_PRESISTED" "$VS_CODE_SETTINGS"
 else
   cp vscode-overrides.json "$VS_CODE_SETTINGS"
+fi
+
+
+# Check and restore symbolic link for Conda
+echo "--------------------Checking and restoring symbolic link for Conda if needed--------------------"
+if [ -d /home/jovyan/conda ] && [ ! "$(readlink -f /opt/conda)" = "/home/jovyan/conda" ]; then
+  echo "Restoring symbolic link for Conda environment..."
+  # Remove any existing Conda directory or symbolic link
+  rm -rf /opt/conda
+  # Create a new symbolic link pointing to the correct Conda directory
+  ln -s /home/jovyan/conda /opt/conda
+  echo "Symbolic link for Conda environment restored."
+else
+  echo "Symbolic link for Conda environment is intact."
 fi
 
 echo "--------------------starting jupyter--------------------"

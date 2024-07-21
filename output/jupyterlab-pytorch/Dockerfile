@@ -137,22 +137,38 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ###  docker-bits/2_pytorch.Dockerfile
 ###############################
 
-# 安裝PyTorch
-RUN pip install --quiet \
-    'torch==1.12.1' \
-    'torchvision==0.13.1' \
-    'torchaudio==0.12.1' \
-    'ipykernel==6.21.3' \
-    'jupyterlab_tensorboard_pro' \
-    'tensorboard==2.13.0' \
-    'matplotlib' \
-    'RISE' \
-    'ipyvolume' \
-    'gdown' \
-    'tqdm' \
-    'opencv-python' \
-    && fix-permissions $CONDA_DIR && \
+
+RUN conda create -n pytorch python=3.9 && \
+   conda install -n pytorch --quiet --yes -c pytorch \
+     'mkl-devel=2022.1.0'\
+     'pytorch==1.12.1' \
+     'torchvision==0.13.1' \
+     'torchaudio==0.12.1' \
+     'ipykernel==6.21.3' \
+     'torchtext==0.13.1' \
+   && \
+   conda clean --all -f -y && \
+   touch /etc/conda_disable_copy && \
+   fix-permissions $CONDA_DIR && \
+   fix-permissions /home/$NB_USER
+
+# Install common package
+RUN source /opt/conda/bin/activate pytorch && \ 
+    pip install --quiet \
+        # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
+        'gradio' \
+        'matplotlib' \
+        'RISE' \
+        'ipyvolume' \
+        'gdown' \
+        'opencv-python' \
+        'pycairo==1.22.0' \
+        'manim==0.18.1' \
+    && \
+    apt install dvisvgm -y  && \
+    fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
+COPY  enable_persistent.ipynb /opt/conda/
 
 ###############################
 ###  docker-bits/3_Kubeflow.Dockerfile
@@ -413,7 +429,7 @@ RUN pip install --quiet \
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
 
 ENV DEFAULT_JUPYTER_URL=/lab
-ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/fdsf53451001/cgu-contrib-jupyter-notebooks
+ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/WinterBelieve/cgu-contrib-jupyter-notebooks
 
 ###############################
 ###  docker-bits/7_remove_vulnerabilities.Dockerfile
@@ -437,7 +453,7 @@ USER $NB_USER
 USER root
 WORKDIR /home/$NB_USER
 EXPOSE 8888
-COPY start-custom.sh /usr/local/bin/
+COPY start-custom.sh /usr/local/bin/ 
 COPY mc-tenant-wrapper.sh /usr/local/bin/mc
 COPY trino-wrapper.sh /usr/local/bin/trino
 
@@ -456,6 +472,8 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
 
+# THis is for manim
+RUN apt update;apt install -y libcogl-pango-dev
 
 USER root
 ENTRYPOINT ["tini", "--"]

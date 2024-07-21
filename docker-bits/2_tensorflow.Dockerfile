@@ -17,7 +17,10 @@ RUN pip install --quiet \
         'ipyvolume' \
         'gdown' \
         'opencv-python' \
+        'pycairo==1.22.0' \
+        'manim==0.18.1' \
     && \
+    apt install dvisvgm -y  && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
@@ -27,3 +30,5 @@ RUN pip install --quiet --no-dependencies \
 && \
 fix-permissions $CONDA_DIR && \
 fix-permissions /home/$NB_USER
+
+COPY  enable_persistent.ipynb /opt/conda/

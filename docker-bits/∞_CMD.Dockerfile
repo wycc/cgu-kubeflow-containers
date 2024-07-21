@@ -3,7 +3,7 @@
 USER root
 WORKDIR /home/$NB_USER
 EXPOSE 8888
-COPY start-custom.sh /usr/local/bin/
+COPY start-custom.sh /usr/local/bin/ 
 COPY mc-tenant-wrapper.sh /usr/local/bin/mc
 COPY trino-wrapper.sh /usr/local/bin/trino
 
@@ -22,6 +22,8 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
 
+# THis is for manim
+RUN apt update;apt install -y libcogl-pango-dev
 
 USER root
 ENTRYPOINT ["tini", "--"]

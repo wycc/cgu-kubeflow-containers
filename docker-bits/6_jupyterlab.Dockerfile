@@ -140,4 +140,4 @@ RUN pip install --quiet \
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
 
 ENV DEFAULT_JUPYTER_URL=/lab
-ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/fdsf53451001/cgu-contrib-jupyter-notebooks
+ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/WinterBelieve/cgu-contrib-jupyter-notebooks

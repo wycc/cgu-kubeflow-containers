@@ -3,8 +3,9 @@
 # Stops script execution if a command has an error
 set -e
 
-SHA256=c643dd519fe8b0b6d2d2241b5c241aa1b43ece397f49268865b4d1888c19173e
-
+#SHA256=c643dd519fe8b0b6d2d2241b5c241aa1b43ece397f49268865b4d1888c19173e
+SHA256=9e200146236e2403d4be088b49a6c8de3294ff1aa000ebf385d42c593207954b
+       
 function disableUpdate() {
     ff_def="$1/browser/defaults/profile"
     mkdir -p $ff_def
@@ -32,7 +33,9 @@ function instFF() {
             FF_URL=http://releases.mozilla.org/pub/firefox/releases/$FF_VERS/linux-x86_64/en-US/firefox-$FF_VERS.tar.bz2
             echo "FF_URL: $FF_URL"
             wget --quiet $FF_URL -O /tmp/firefox.tar.bz2
+            sha256sum /tmp/firefox.tar.bz2
             echo "${SHA256} /tmp/firefox.tar.bz2" | sha256sum -c -
+
             tar xvjf /tmp/firefox.tar.bz2 --strip=1 -C $FF_INST/
             ln -s "$FF_INST/firefox" /usr/bin/firefox
             rm /tmp/firefox.tar.bz2
@@ -49,7 +52,7 @@ function instFF() {
 
 if ! hash firefox 2>/dev/null; then
     echo "Installing Firefox. Please wait..."
-    instFF '86.0'  '/usr/lib/firefox'
+    instFF '127.0.2'  '/usr/lib/firefox'
 else
     echo "Firefox is already installed"
 fi

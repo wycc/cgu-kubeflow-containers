@@ -21,8 +21,13 @@ RUN pip install --quiet \
         # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
         'gradio' \
         'matplotlib' \
+        'RISE' \
+        'ipyvolume' \
         'gdown' \
         'opencv-python' \
+        'pycairo==1.22.0' \
+        'manim==0.18.1' \
     && \
+    apt install dvisvgm -y  && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
