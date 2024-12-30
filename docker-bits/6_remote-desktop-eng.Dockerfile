@@ -195,9 +195,18 @@ COPY firefox.cfg /usr/lib/firefox/
 
 
 #Install VsCode
-RUN apt-get update --yes \
-    && apt-get install --yes nodejs npm \
-    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install \
+#RUN apt-get update --yes \
+#    && apt-get install --yes nodejs npm \
+#    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install \
+#    && clean-layer.sh
+
+
+
+# 安裝最新的 Node.js 18.x 版本
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install --yes nodejs \
+    && npm install -g npm@latest \
+    && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
 
 # Install Visual Studio Code extensions
@@ -399,7 +408,7 @@ RUN apt-get update --yes \
 RUN chown -R $NB_USER /home/$NB_USER 
 
 USER $NB_USER
-COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
+COPY --chown=$NB_USER:100 nginx-noipv6.conf /etc/nginx/nginx.conf 
 
 # setup ssl certificate for WebSocket
 USER root
@@ -433,9 +442,10 @@ COPY php8.1-fpm /etc/init.d/php8.1-fpm
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
 
-
-
 # COPY start-remote-desktop.sh /usr/local/bin/
 COPY setup_catkin_ws.sh /usr/local/bin/
 
+# add --no-sandbox to /usr/share/applications/code-url-handler.desktop
 USER $NB_USER
+RUN sed -i 's/--open-url/--no-sandbox --open-url/' /usr/share/applications/code-url-handler.desktop
+

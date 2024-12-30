@@ -202,5 +202,7 @@ mv /var/www/html/index.php $HOME/index.php
 # fix home folder permission
 # chown jovyan:users $HOME/*
 
+
+
 nginx
 wait

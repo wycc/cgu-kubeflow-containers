@@ -1,5 +1,34 @@
 #!/bin/bash
 
+# 設置MPS環境變量
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+export CUDA_MPS_LOG_DIRECTORY=/var/log/nvidia-mps
+export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=50
+
+# 啟動MPS控制守護進程
+nvidia-cuda-mps-control -d
+
+# 設置默認的設備pinned內存限制
+echo set_default_device_pinned_mem_limit 0 12G | nvidia-cuda-mps-control
+
+# 添加等待以確保MPS控制守護進程完全啟動
+sleep 5
+
+# 確保MPS守護進程啟動成功後再設置具體的內存限制
+pid=$(pgrep -f nvidia-cuda-mps-control)
+if [ -n "$pid" ]; then
+    echo set_device_pinned_mem_limit $pid 0 12G | nvidia-cuda-mps-control
+else
+    echo "MPS控制守護進程未啟動"
+fi
+
+# 限制具體客戶端的內存限制
+export CUDA_MPS_DEVICE_MEM_LIMIT="0=12G"
+
+# 啟動其他應用或任務
+# 這裡可以放其他需要啟動的命令或腳本
+
+
 # move conda env to home directory to keep packages data
 echo "--------------------Do we need to copy files?--------------------"
 if [ ! -f /etc/conda_disable_copy ]; then

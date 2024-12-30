@@ -20,8 +20,29 @@ RUN apt-get -y update \
 ENV RESOURCES_PATH="/resources"
 RUN mkdir $RESOURCES_PATH
 
+ARG ENG
+RUN echo $ENG
+ARG LANGUAGE
+RUN echo $LANGUAGE
+ENV LANG=$LANGUAGE
+
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
+
+# Install Traditional Chinese Locale and Fonts.
+RUN if [ "$ENG" = "FALSE" ]; then \
+    apt-get update && \
+    apt-get install -y locales && \
+    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=zh_TW.UTF-8 && \
+    clean-layer.sh; \
+    fi
+
+
+RUN cd /usr/local/share/fonts && \
+    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
+    fc-cache -f -v
 
 # Install Terminal / GDebi (Package Manager) / & archive tools
 RUN \
@@ -185,9 +206,11 @@ RUN /bin/bash $RESOURCES_PATH/firefox.sh --install && \
     clean-layer.sh
 
 #Copy the Traditional Chinese language pack file
-RUN wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
+RUN if [ "$ENG" = "FALSE" ]; then \
+    wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
     mkdir --parents /usr/lib/firefox/distribution/extensions/ && \
-    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/
+    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/;\
+    fi
 
 #Configure and set up Firefox to start up in a specific language (depends on LANG env variable)
 COPY autoconfig.js /usr/lib/firefox/defaults/pref/
@@ -197,13 +220,20 @@ COPY firefox.cfg /usr/lib/firefox/
 #Install VsCode
 # RUN apt-get update --yes \
 #    && apt-get install --yes nodejs npm \
-#    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install  \
+#    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install \
 #    && clean-layer.sh
 
+
+
 # 安裝最新的 Node.js 18.x 版本
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install --yes nodejs \
-    && npm install -g npm@latest \
+# RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+#     && apt-get install --yes nodejs \
+#     && npm install -g npm@latest \
+#     && /bin/bash /resources/vs-code-desktop.sh --install \
+#     && clean-layer.sh
+# 安裝最新的 Node.js 18.x 版本
+RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - \
+    && sudo apt install --yes nodejs \
     && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
 
@@ -335,20 +365,7 @@ RUN apt-get update && apt-get install --yes websockify \
 #ADD . /opt/install
 #RUN pwd && echo && ls /opt/install
 
-# Install Traditional Chinese Locale and Fonts.
-RUN \
-    apt-get update && \
-    apt-get install -y locales && \
-    sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
 
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
-    wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -371,6 +388,45 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     /opt/conda/bin/conda clean -afy && \
     chown -R $NB_UID:$NB_GID /opt/conda
 
+#Install ROS Ubuntu
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && \
+    apt-get -y install curl && \
+    curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add - && \
+    apt-get update && \
+    apt-get -y install ros-noetic-desktop-full && \
+    apt-get -y install ros-noetic-joy ros-noetic-teleop-twist-joy ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc ros-noetic-rgbd-launch ros-noetic-rosserial-arduino ros-noetic-rosserial-python ros-noetic-rosserial-client ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro ros-noetic-compressed-image-transport ros-noetic-rqt-image-view ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers && \
+    apt-get -y install ros-noetic-ros-control* && \
+    apt-get -y install ros-noetic-control* -o Dpkg::Options::="--force-overwrite" && \
+    apt-get -y install ros-noetic-moveit* -o Dpkg::Options::="--force-overwrite"
+
+#Catkin_ws folder
+RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
+RUN mkdir -p /opt/catkin_ws/src
+
+
+RUN cd /opt/catkin_ws/src && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
+    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
+
+#python packages for ROS
+RUN conda upgrade conda && \
+    conda install -c conda-forge rospkg && \
+    conda install -c conda-forge defusedxml && \
+    conda install -c anaconda numpy && \
+    conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch && \
+    conda install -c anaconda pandas && \
+    conda install -c conda-forge matplotlib
+    # conda install -c anaconda tensorflow-gpu
+# RUN conda install -c "conda-forge/label/cf202003" opencv
+
+
+
+
+
 #Set Defaults
 ENV HOME=/home/$NB_USER
 
@@ -390,7 +446,7 @@ RUN pip3 install --force websockify==0.9.0 \
 COPY --chown=$NB_USER:100 vnc.html /opt/novnc/vnc.html
 COPY --chown=$NB_USER:100 folder.png /opt/novnc/app/images/folder.png
 COPY --chown=$NB_USER:100 canada.ico $RESOURCES_PATH/favicon.ico
-COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js
+COPY --chown=$NB_USER:100 ui.js /opt/novnc/app/ui.js 
 COPY --chown=$NB_USER:100 keyboard.js /opt/novnc/core/input/keyboard.js
 COPY --chown=$NB_USER:100 rfb.js /opt/novnc/core/rfb.js
 COPY --chown=$NB_USER:100 ssl.conf /opt/novnc/utils/ssl.conf
@@ -418,29 +474,17 @@ RUN apt update \
 # setup tinyfilemanager
 USER root
 RUN apt update \
-    && apt-get update \
     && sudo apt install -y software-properties-common \
     && add-apt-repository ppa:ondrej/php \
     && apt update \
     && apt install php8.1-fpm -y \
-    && apt-get install language-pack-zh-han* -y \
-    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
-    && chmod u+x dayisetup.sh \
-    && ./dayisetup.sh \
-    && rm dayisetup.sh \
-    && rm dayi3.cin
-
-
+    && apt install minicom socat -y
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
 COPY php8.1-fpm /etc/init.d/php8.1-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
-
-# COPY start-remote-desktop.sh /usr/local/bin/
 COPY setup_catkin_ws.sh /usr/local/bin/
 
 USER $NB_USER
@@ -449,3 +493,8 @@ USER $NB_USER
 USER root
 RUN sed -i 's/--open-url/--no-sandbox --open-url/' /usr/share/applications/code-url-handler.desktop
 
+# disable "tracker" [Patten 2024/12/09]
+RUN systemctl --user mask tracker-store.service tracker-miner-fs.service tracker-miner-rss.service tracker-extract.service tracker-miner-apps.service tracker-writeback.service && \
+    echo "y" | tracker daemon -t && \
+    echo "y" | tracker reset --hard && \
+    rm -rf ~/.cache/tracker ~/.local/share/tracker

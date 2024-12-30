@@ -22,8 +22,9 @@ RUN cat /tmp/Rprofile.site >> /opt/conda/lib/R/etc/Rprofile.site && rm /tmp/Rpro
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-forge-nvidia --system && \
 #     conda config --add channels http://jfrog-platform-artifactory-ha.jfrog-system:8081/artifactory/api/conda/conda-pytorch-remote --system
 
-# THis is for manim
-RUN apt update;apt install -y libcogl-pango-dev
+# This is for manim
+RUN apt-get update && apt-get install -y --fix-broken && \
+    apt-get install -y libcogl-pango-dev gir1.2-coglpango-1.0 libcairo2-dev libcogl-dev libcogl-pango20 libdrm-dev libglib2.0-dev libpango1.0-dev libx11-dev libxcomposite-dev libxdamage-dev libxext-dev libxfixes-dev libpdfbox-java
 
 USER root
 ENTRYPOINT ["tini", "--"]

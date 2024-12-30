@@ -1,0 +1,4 @@
+#!/bin/bash
+make remote-desktop-ros-eng
+make build/remote-desktop-ros-eng REPO=cguaicadmin TAG=V1.0.6
+make push/remote-desktop-ros-eng REPO=cguaicadmin TAG=V1.0.6

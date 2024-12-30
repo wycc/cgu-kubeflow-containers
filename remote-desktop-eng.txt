@@ -1,0 +1,16 @@
+# End repo with exactly one trailing slash, unless it is empty
+REPO=$(echo "cguaicadmin" | sed 's:/*$:/:' | sed 's:^\s*/*\s*$::') &&\
+IMAGE_NAME="${REPO}remote-desktop-eng:test" ; \
+if [ $IMAGE_NAME = "${REPO}remote-desktop:test" ] || [ $IMAGE_NAME = "${REPO}remote-desktop-ros:test" ]; then \
+	ENG="FALSE" && \
+	LANGUAGE="zh_TW.UTF-8" ; \
+else \
+	ENG="TRUE" && \
+	LANGUAGE="en_US.UTF-8" ; \
+fi ; \
+docker build  --rm --progress=auto --force-rm -t $IMAGE_NAME ./output/remote-desktop-eng --build-arg ENG=$ENG --build-arg LANGUAGE=$LANGUAGE && \
+echo -n "Built image $IMAGE_NAME of size: " && \
+docker images $IMAGE_NAME --format "{{.Size}}" && \
+echo "::set-output name=full_image_name::$IMAGE_NAME" && \
+echo "::set-output name=image_tag::test" && \
+echo "::set-output name=image_repo::${REPO}"

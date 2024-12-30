@@ -20,6 +20,12 @@ RUN apt-get -y update \
 ENV RESOURCES_PATH="/resources"
 RUN mkdir $RESOURCES_PATH
 
+ARG ENG
+RUN echo $ENG
+ARG LANGUAGE
+RUN echo $LANGUAGE
+ENV LANG=$LANGUAGE
+
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
 
@@ -185,9 +191,11 @@ RUN /bin/bash $RESOURCES_PATH/firefox.sh --install && \
     clean-layer.sh
 
 #Copy the Traditional Chinese language pack file
-RUN wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
+RUN if [ "$ENG" = "FALSE" ]; then \ 
+    wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
     mkdir --parents /usr/lib/firefox/distribution/extensions/ && \
-    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/
+    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/ ; \
+    fi
 
 #Configure and set up Firefox to start up in a specific language (depends on LANG env variable)
 COPY autoconfig.js /usr/lib/firefox/defaults/pref/
@@ -201,11 +209,18 @@ COPY firefox.cfg /usr/lib/firefox/
 #    && clean-layer.sh
 
 # 安裝最新的 Node.js 18.x 版本
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install --yes nodejs \
-    && npm install -g npm@latest \
+# RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+#     && apt-get install --yes nodejs \
+#     && npm install -g npm@latest \
+#     && /bin/bash /resources/vs-code-desktop.sh --install \
+#     && clean-layer.sh
+
+# 安裝最新的 Node.js 18.x 版本
+RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - \
+    && sudo apt install --yes nodejs \
     && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
+
 
 # Install Visual Studio Code extensions
 # https://github.com/cdr/code-server/issues/171
@@ -336,17 +351,18 @@ RUN apt-get update && apt-get install --yes websockify \
 #RUN pwd && echo && ls /opt/install
 
 # Install Traditional Chinese Locale and Fonts.
-RUN \
+RUN if [ "$ENG" = "FALSE" ]; then \
+    echo ${ENG} && \
     apt-get update && \
     apt-get install -y locales && \
     sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
+    clean-layer.sh ;\
+    fi
 
-ENV LANG=zh_TW.UTF-8
-RUN \
-    cd /usr/local/share/fonts && \
+# RUN if [ "$ENG" = "FALSE" ]; then \
+RUN cd /usr/local/share/fonts && \
     wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
     fc-cache -f -v
 
@@ -448,4 +464,11 @@ USER $NB_USER
 # add --no-sandbox to /usr/share/applications/code-url-handler.desktop
 USER root
 RUN sed -i 's/--open-url/--no-sandbox --open-url/' /usr/share/applications/code-url-handler.desktop
+
+# disable "tracker" [Patten 2024/12/09]
+RUN systemctl --user mask tracker-store.service tracker-miner-fs.service tracker-miner-rss.service tracker-extract.service tracker-miner-apps.service tracker-writeback.service && \
+    echo "y" | tracker daemon -t && \
+    echo "y" | tracker reset --hard && \
+    rm -rf ~/.cache/tracker ~/.local/share/tracker
+
 

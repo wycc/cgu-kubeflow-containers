@@ -133,7 +133,7 @@ RUN curl -LO "${KUBECTL_URL}" \
     && sudo mv /tmp/trino-original /usr/local/bin/trino-original
 
 ###############################
-###  docker-bits/6_remote-desktop.Dockerfile
+###  docker-bits/6_new-remote-desktop_normal.Dockerfile
 ###############################
 
 USER root
@@ -157,6 +157,11 @@ RUN apt-get -y update \
 
 ENV RESOURCES_PATH="/resources"
 RUN mkdir $RESOURCES_PATH
+
+ARG ENG
+RUN echo $ENG
+ARG LANGUAGE
+RUN echo $LANGUAGE
 
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
@@ -323,9 +328,11 @@ RUN /bin/bash $RESOURCES_PATH/firefox.sh --install && \
     clean-layer.sh
 
 #Copy the Traditional Chinese language pack file
-RUN wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
+RUN if [ "$ENG" = "FALSE" ]; then \ 
+    wget https://addons.mozilla.org/firefox/downloads/file/4101962/traditional_chinese_zh_tw_l-112.0.20230424.110519.xpi  -O langpack-zh_TW@firefox.mozilla.org.xpi && \
     mkdir --parents /usr/lib/firefox/distribution/extensions/ && \
-    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/
+    mv langpack-zh_TW@firefox.mozilla.org.xpi /usr/lib/firefox/distribution/extensions/ ; \
+    fi
 
 #Configure and set up Firefox to start up in a specific language (depends on LANG env variable)
 COPY autoconfig.js /usr/lib/firefox/defaults/pref/
@@ -333,9 +340,16 @@ COPY firefox.cfg /usr/lib/firefox/
 
 
 #Install VsCode
-RUN apt-get update --yes \
-    && apt-get install --yes nodejs npm \
-    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install  \
+# RUN apt-get update --yes \
+#    && apt-get install --yes nodejs npm \
+#    && /bin/bash $RESOURCES_PATH/vs-code-desktop.sh --install  \
+#    && clean-layer.sh
+
+# 安裝最新的 Node.js 18.x 版本
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install --yes nodejs \
+    && npm install -g npm@latest \
+    && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
 
 # Install Visual Studio Code extensions
@@ -467,19 +481,23 @@ RUN apt-get update && apt-get install --yes websockify \
 #RUN pwd && echo && ls /opt/install
 
 # Install Traditional Chinese Locale and Fonts.
-RUN \
+RUN if [ "$ENG" = "FALSE" ]; then \
+    echo ${ENG} && \
     apt-get update && \
     apt-get install -y locales && \
     sed -i -e "s/# zh_TW.UTF-8 UTF-8/zh_TW.UTF-8 UTF-8/" /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=zh_TW.UTF-8 && \
-    clean-layer.sh
+    clean-layer.sh ;\
+    fi
 
-ENV LANG=zh_TW.UTF-8
-RUN \
+ENV LANG=$LANGUAGE
+
+RUN if [ "$ENG" = "FALSE" ]; then \
     cd /usr/local/share/fonts && \
     wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v
+    fc-cache -f -v ; \
+    fi
 
 #Install Miniconda
 #Has to be appended, else messes with qgis
@@ -537,7 +555,7 @@ RUN apt-get update --yes \
 RUN chown -R $NB_USER /home/$NB_USER 
 
 USER $NB_USER
-COPY --chown=$NB_USER:100 nginx.conf /etc/nginx/nginx.conf
+COPY --chown=$NB_USER:100 nginx-noipv6.conf /etc/nginx/nginx.conf 
 
 # setup ssl certificate for WebSocket
 USER root
@@ -576,17 +594,48 @@ COPY setup_catkin_ws.sh /usr/local/bin/
 
 USER $NB_USER
 
+# add --no-sandbox to /usr/share/applications/code-url-handler.desktop
+USER root
+RUN sed -i 's/--open-url/--no-sandbox --open-url/' /usr/share/applications/code-url-handler.desktop
+
+# disable "tracker" [Patten 2024/12/09]
+RUN systemctl --user mask tracker-store.service tracker-miner-fs.service tracker-miner-rss.service tracker-extract.service tracker-miner-apps.service tracker-writeback.service && \
+    echo "y" | tracker daemon -t && \
+    echo "y" | tracker reset --hard && \
+    rm -rf ~/.cache/tracker ~/.local/share/tracker
+
+
+
 ###############################
 ###  docker-bits/7_remove_vulnerabilities.Dockerfile
 ###############################
 
-# Remove libpdfbox-java due to CVE-2019-0228. See https://github.com/StatCan/aaw-kubeflow-containers/issues/249#issuecomment-834808115 for details.
-# Issue opened https://github.com/jupyter/docker-stacks/issues/1299.
-# This line of code should be removed once a solution or better alternative is found.
+# 移除 libpdfbox-java 以避免 CVE-2019-0228 的安全問題
+# 詳情參見 https://github.com/StatCan/aaw-kubeflow-containers/issues/249#issuecomment-834808115
+# 問題已在 https://github.com/jupyter/docker-stacks/issues/1299 中提出
+# 一旦找到解決方案或更好的替代方案，應該移除此行代碼。
+
 USER root
-RUN apt-get update --yes \
+
+# 更新並安裝 libcogl-pango-dev 及其依賴項，然後移除 libpdfbox-java
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcogl-pango-dev \
+    gir1.2-coglpango-1.0 \
+    libcairo2-dev \
+    libcogl-dev \
+    libcogl-pango20 \
+    libdrm-dev \
+    libglib2.0-dev \
+    libpango1.0-dev \
+    libx11-dev \
+    libxcomposite-dev \
+    libxdamage-dev \
+    libxext-dev \
+    libxfixes-dev \
+    && apt-get install -f \
     && dpkg -r --force-depends libpdfbox-java \
     && rm -rf /var/lib/apt/lists/*
+
 USER $NB_USER
 
 ###############################
@@ -620,6 +669,7 @@ RUN rm -rf /opt/conda/envs && \
 # Point R to Artifactory repository
 COPY Rprofile.site /tmp/Rprofile.site
 RUN cat /tmp/Rprofile.site >> /usr/local/lib/R/etc/Rprofile.site && rm /tmp/Rprofile.site
+
 
 #USER $NB_USER
 USER root

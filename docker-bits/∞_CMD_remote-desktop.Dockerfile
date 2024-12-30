@@ -26,6 +26,7 @@ RUN rm -rf /opt/conda/envs && \
 COPY Rprofile.site /tmp/Rprofile.site
 RUN cat /tmp/Rprofile.site >> /usr/local/lib/R/etc/Rprofile.site && rm /tmp/Rprofile.site
 
+
 #USER $NB_USER
 USER root
 ENTRYPOINT ["tini", "--"]

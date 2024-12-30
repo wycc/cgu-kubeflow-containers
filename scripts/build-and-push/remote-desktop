@@ -1,0 +1,4 @@
+#!/bin/bash
+make remote-desktop
+make build/remote-desktop REPO=cguaicadmin TAG=test
+make push/remote-desktop REPO=cguaicadmin TAG=test

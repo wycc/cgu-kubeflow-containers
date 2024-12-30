@@ -53,6 +53,11 @@ BRANCH_NAME := $(shell ./make_helpers/get_branch_name.sh)
 DEFAULT_PORT := 8888
 DEFAULT_NB_PREFIX := /notebook/username/notebookname
 
+# ENG
+DEFAULT_ENG := FALSE
+
+
+
 .PHONY: clean .output generate-dockerfiles
 
 clean:
@@ -252,7 +257,7 @@ remote-desktop:
 		$(SRC)/0_Rocker.Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
-		$(SRC)/6_remote-desktop.Dockerfile \
+		$(SRC)/6_new-remote-desktop_normal.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
@@ -268,7 +273,7 @@ remote-desktop-eng:
 		$(SRC)/0_Rocker.Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
-		$(SRC)/6_remote-desktop-eng.Dockerfile \
+		$(SRC)/6_new-remote-desktop_normal.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
@@ -286,7 +291,7 @@ remote-desktop-ros:
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
-		$(SRC)/6_remote-desktop-ros.Dockerfile \
+		$(SRC)/6_new-remote-desktop_ros.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
@@ -303,7 +308,7 @@ remote-desktop-ros-eng:
 		$(SRC)/1_CUDA-$($(@)-CUDA).Dockerfile \
 		$(SRC)/3_Kubeflow.Dockerfile \
 		$(SRC)/4_CLI.Dockerfile \
-		$(SRC)/6_remote-desktop-ros-eng.Dockerfile \
+		$(SRC)/6_new-remote-desktop_ros.Dockerfile \
 		$(SRC)/7_remove_vulnerabilities.Dockerfile \
 		$(SRC)/∞_CMD_remote-desktop.Dockerfile \
 	>   $(OUT)/$@/Dockerfile
@@ -354,8 +359,15 @@ build/%: TAG?=$(DEFAULT_TAG)
 build/%: ## build the latest image
 	# End repo with exactly one trailing slash, unless it is empty
 	REPO=$$(echo "$(REPO)" | sed 's:/*$$:/:' | sed 's:^\s*/*\s*$$::') &&\
-	IMAGE_NAME="$${REPO}$(notdir $@):$(TAG)" && \
-	docker build $(DARGS) --rm --force-rm -t $$IMAGE_NAME ./output/$(notdir $@) && \
+	IMAGE_NAME="$${REPO}$(notdir $@):$(TAG)" ; \
+	if [ $$IMAGE_NAME = "$${REPO}remote-desktop:$(TAG)" ] || [ $$IMAGE_NAME = "$${REPO}remote-desktop-ros:$(TAG)" ]; then \
+		ENG="FALSE" && \
+		LANGUAGE="zh_TW.UTF-8" ; \
+	else \
+		ENG="TRUE" && \
+		LANGUAGE="en_US.UTF-8" ; \
+	fi ; \
+	docker build $(DARGS) --rm --progress=auto --force-rm -t $$IMAGE_NAME ./output/$(notdir $@) --build-arg ENG=$$ENG --build-arg LANGUAGE=$$LANGUAGE && \
 	echo -n "Built image $$IMAGE_NAME of size: " && \
 	docker images $$IMAGE_NAME --format "{{.Size}}" && \
 	echo "::set-output name=full_image_name::$$IMAGE_NAME" && \
