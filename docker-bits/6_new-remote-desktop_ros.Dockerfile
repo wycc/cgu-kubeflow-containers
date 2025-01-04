@@ -498,3 +498,4 @@ RUN systemctl --user mask tracker-store.service tracker-miner-fs.service tracker
     echo "y" | tracker daemon -t && \
     echo "y" | tracker reset --hard && \
     rm -rf ~/.cache/tracker ~/.local/share/tracker
+    
