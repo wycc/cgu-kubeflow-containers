@@ -451,5 +451,5 @@ dev/%: ## run a foreground container for a stack (useful for local testing)
 	else\
 		( sleep 5 && open "http://localhost:8888$(NB_PREFIX)" ) &  \
 	fi; \
-	docker run -it --rm -p $(PORT):8888 -e NB_PREFIX=$(NB_PREFIX) $(DARGS) $${IMAGE_NAME} $(ARGS)
+	docker run -it --rm -p $(PORT):8888 -e NB_PREFIX=$(NB_PREFIX) $(DARGS) $${IMAGE_NAME} $(ARGS
 
