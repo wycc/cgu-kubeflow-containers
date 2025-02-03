@@ -367,7 +367,7 @@ build/%: ## build the latest image
 		ENG="TRUE" && \
 		LANGUAGE="en_US.UTF-8" ; \
 	fi ; \
-	docker build $(DARGS) --rm --progress=auto --force-rm -t $$IMAGE_NAME ./output/$(notdir $@) --build-arg ENG=$$ENG --build-arg LANGUAGE=$$LANGUAGE && \
+	docker build $(DARGS) --progress=auto --rm --force-rm -t $$IMAGE_NAME ./output/$(notdir $@) --build-arg ENG=$$ENG --build-arg LANGUAGE=$$LANGUAGE && \
 	echo -n "Built image $$IMAGE_NAME of size: " && \
 	docker images $$IMAGE_NAME --format "{{.Size}}" && \
 	echo "::set-output name=full_image_name::$$IMAGE_NAME" && \
@@ -451,5 +451,5 @@ dev/%: ## run a foreground container for a stack (useful for local testing)
 	else\
 		( sleep 5 && open "http://localhost:8888$(NB_PREFIX)" ) &  \
 	fi; \
-	docker run -it --rm -p $(PORT):8888 -e NB_PREFIX=$(NB_PREFIX) $(DARGS) $${IMAGE_NAME} $(ARGS
+	docker run -it --rm -p $(PORT):8888 -e NB_PREFIX=$(NB_PREFIX) $(DARGS) $${IMAGE_NAME} $(ARGS)
 

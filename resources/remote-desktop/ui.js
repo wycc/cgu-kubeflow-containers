@@ -499,15 +499,13 @@ const UI = {
         UI.addSettingChangeHandler('reconnect');
         UI.addSettingChangeHandler('reconnect_delay');
         document.querySelector('#noVNC_setting_serial').addEventListener('click', function() {
-		onStartButtonClick();
-	});
+		    onStartButtonClick();
+	    });
         if (window.location.href.indexOf("/view/")!= -1) {
-		document.getElementById('noVNC_setting_view_only').checked=true;
-		document.getElementById('noVNC_setting_view_only').style.display = 'none';
-		UI.saveSetting('view_only');
-
-	}
-	
+            document.getElementById('noVNC_setting_view_only').checked=true;
+            document.getElementById('noVNC_setting_view_only').style.display = 'none';
+            UI.saveSetting('view_only');
+	    }
     },
 
     addFullscreenHandlers() {
