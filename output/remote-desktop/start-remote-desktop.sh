@@ -71,6 +71,7 @@ fi
 
 echo "KFP multi-user has been configured"
 
+mkdir -p $HOME/envs
 # Create desktop shortcuts
 if [ -d $RESOURCES_PATH/desktop-files ]; then
     mkdir -p ~/.local/share/applications/ $HOME/Desktop

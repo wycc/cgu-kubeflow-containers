@@ -162,6 +162,7 @@ ARG ENG
 RUN echo $ENG
 ARG LANGUAGE
 RUN echo $LANGUAGE
+ENV LANG=$LANGUAGE
 
 # Copy installation scripts
 COPY remote-desktop $RESOURCES_PATH
@@ -346,11 +347,18 @@ COPY firefox.cfg /usr/lib/firefox/
 #    && clean-layer.sh
 
 # 安裝最新的 Node.js 18.x 版本
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install --yes nodejs \
-    && npm install -g npm@latest \
+# RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+#     && apt-get install --yes nodejs \
+#     && npm install -g npm@latest \
+#     && /bin/bash /resources/vs-code-desktop.sh --install \
+#     && clean-layer.sh
+
+# 安裝最新的 Node.js 18.x 版本
+RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - \
+    && sudo apt install --yes nodejs \
     && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
+
 
 # Install Visual Studio Code extensions
 # https://github.com/cdr/code-server/issues/171
@@ -491,13 +499,10 @@ RUN if [ "$ENG" = "FALSE" ]; then \
     clean-layer.sh ;\
     fi
 
-ENV LANG=$LANGUAGE
-
-RUN if [ "$ENG" = "FALSE" ]; then \
-    cd /usr/local/share/fonts && \
+# RUN if [ "$ENG" = "FALSE" ]; then \
+RUN cd /usr/local/share/fonts && \
     wget https://fonts.gstatic.com/s/notosanstc/v26/-nF7OG829Oofr2wohFbTp9iFOQ.otf -O NotoSansTC-Regular.otf && \
-    fc-cache -f -v ; \
-    fi
+    fc-cache -f -v
 
 #Install Miniconda
 #Has to be appended, else messes with qgis

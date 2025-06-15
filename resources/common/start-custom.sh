@@ -1,30 +1,4 @@
 #!/bin/bash
-
-# move conda env to home directory to keep packages data
-echo "--------------------Do we need to copy files?--------------------"
-if [ ! -f /etc/conda_disable_copy ]; then
-  if [ ! -d /home/jovyan/envs ]; then
-    echo "--------------------Copy files now--------------------"
-    cp -a /opt/conda/envs /home/jovyan/conda/envs
-  fi
-else
-  if [ ! -f /home/jovyan/enable_persistent.ipynb ]; then
-    (cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/master/resources/common/enable_persistent.ipynb)
-  fi
-fi
-
-if [ -d /home/jovyan/envs/tensorflow ]; then
-  echo "--------------------build symbolic links for tensorflow --------------------"
-  mv /opt/conda/envs /opt/conda/envs.old
-  ln -s /home/jovyan/envs /opt/conda/envs
-fi
-
-if [ -d /home/jovyan/envs/pytorch ]; then
-  echo "--------------------build symbolic links for pytorch --------------------"
-  mv /opt/conda/envs /opt/conda/envs.old 
-  ln -s /home/jovyan/envs /opt/conda/envs
-fi
-
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then
   while ! curl -s -f http://127.0.0.1:15020/healthz/ready; do sleep 1; done
@@ -39,6 +13,19 @@ else
 fi
 
 test -z "$GIT_EXAMPLE_NOTEBOOKS" || git clone "$GIT_EXAMPLE_NOTEBOOKS"
+
+echo "--------------------Ensure Notebook is here--------------------"
+if [ ! -f /home/jovyan/AddNewCondaEnvironment.ipynb ]; then
+  cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/cgu-1.8/resources/common/AddNewCondaEnvironment.ipynb
+fi
+echo "--------------------Done--------------------"
+
+if [ ! -d /home/jovyan/envs/ ]; then
+  echo "--------------------build symbolic links for pytorch --------------------"
+  mkdir /home/jovyan/envs
+  mv /opt/conda/envs /opt/conda/envs.old 
+  ln -s /home/jovyan/envs /opt/conda/envs
+fi
 
 # Configure the shell! If not already configured.
 # if [ ! -f /home/$NB_USER/.zsh-installed ]; then
@@ -150,6 +137,7 @@ else
   mkdir -p $HOME/.conda/envs
 fi
 
+conda init
 
 printenv | grep KUBERNETES >> /opt/conda/lib/R/etc/Renviron
 

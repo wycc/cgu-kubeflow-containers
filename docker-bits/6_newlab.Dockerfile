@@ -138,6 +138,7 @@ RUN pip install --quiet \
 
 # Solarized Theme and Cell Execution Time
 COPY jupyterlab-overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
+COPY AddNewCondaEnvironment.ipynb /home/$NB_USER/AddNewCondaEnvironment.ipynb
 
 ENV DEFAULT_JUPYTER_URL=/lab
 ENV GIT_EXAMPLE_NOTEBOOKS=https://github.com/WinterBelieve/cgu-contrib-jupyter-notebooks
