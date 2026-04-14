@@ -240,15 +240,10 @@ RUN \
     VS_LOCALE_REPO_VERSION="1.68.3" && \
     git clone -b release/$VS_LOCALE_REPO_VERSION https://github.com/microsoft/vscode-loc.git && \
     cd vscode-loc && \
-    npm install -g --unsafe-perm vsce@1.103.1 && \
-    cd i18n/vscode-language-pack-fr && \
-    vsce package && \
-    bsdtar -xf vscode-language-pack-fr-$VS_FRENCH_VERSION.vsix extension && \
-    mv extension $HOME/.vscode/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION && \
-    cd ../../../ && \
+    mv i18n/vscode-language-pack-fr $HOME/.vscode/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION && \
+    cd ../ && \
     # -fr option is required. git clone protects the directory and cannot delete it without -fr
     rm -fr vscode-loc && \
-    npm uninstall -g vsce && \
     # Fix permissions
     fix-permissions $HOME/.vscode/extensions/ && \
     # Cleanup
@@ -273,9 +268,9 @@ RUN add-apt-repository ppa:libreoffice/ppa && \
     apt-get install -y libreoffice-help-fr libreoffice-l10n-fr && \
     clean-layer.sh
 
-#Install PSPP
-RUN /bin/bash $RESOURCES_PATH/pspp.sh \
-    && clean-layer.sh
+# #Install PSPP
+# RUN /bin/bash $RESOURCES_PATH/pspp.sh \
+#     && clean-layer.sh
 
 #Install Minio
 COPY minio-icon.png $RESOURCES_PATH/minio-icon.png
@@ -433,25 +428,22 @@ RUN apt update \
 
 # setup tinyfilemanager
 USER root
-RUN apt update \
-    && apt-get update \
-    && sudo apt install -y software-properties-common \
-    && add-apt-repository ppa:ondrej/php \
-    && apt update \
-    && apt install php8.1-fpm -y \
+RUN apt-get update \
+    && apt-get install -y software-properties-common uuid-runtime \
+    && apt-get install -y php7.4-fpm \
     && apt-get install language-pack-zh-han* -y \
-    && apt install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
+    && apt-get install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
     && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
     && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
     && chmod u+x dayisetup.sh \
+    && sed -i 's/ibus-daemon/#ibus-daemon/g' dayisetup.sh \
     && ./dayisetup.sh \
-    && rm dayisetup.sh \
-    && rm dayi3.cin
+    && rm dayisetup.sh dayi3.cin
 
 
 USER $NB_USER 
-COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
-COPY php8.1-fpm /etc/init.d/php8.1-fpm
+COPY --chown=$NB_USER:100 www.conf /etc/php/7.4/fpm/pool.d/www.conf
+COPY php8.1-fpm /etc/init.d/php7.4-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
@@ -471,4 +463,7 @@ RUN systemctl --user mask tracker-store.service tracker-miner-fs.service tracker
     echo "y" | tracker reset --hard && \
     rm -rf ~/.cache/tracker ~/.local/share/tracker
 
+# install ssh
+RUN apt update && \
+apt install openssh-server -y
 
