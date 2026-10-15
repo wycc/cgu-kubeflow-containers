@@ -87,7 +87,6 @@ RUN apt-get update && \
   && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=minio/mc:RELEASE.2022-03-17T20-25-06Z /bin/mc /usr/local/bin/mc-original
 
 ARG KUBECTL_VERSION=v1.15.10
 ARG KUBECTL_URL=https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
@@ -111,7 +110,7 @@ RUN apt-get update && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
-# kubectl, mc, and az
+# kubectl and az
 RUN curl -LO "${KUBECTL_URL}" \
     && echo "${KUBECTL_SHA} kubectl" | sha256sum -c - \
     && chmod +x ./kubectl \
@@ -581,7 +580,7 @@ RUN apt-get update \
 
 USER $NB_USER 
 COPY --chown=$NB_USER:100 www.conf /etc/php/7.4/fpm/pool.d/www.conf
-COPY php8.1-fpm /etc/init.d/php7.4-fpm
+COPY php7.4-fpm /etc/init.d/php7.4-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
@@ -649,7 +648,6 @@ USER root
 WORKDIR /home/$NB_USER
 EXPOSE 8888
 COPY start-remote-desktop.sh /usr/local/bin/
-COPY mc-tenant-wrapper.sh /usr/local/bin/mc
 COPY trino-wrapper.sh /usr/local/bin/trino
 RUN chmod +x /usr/local/bin/trino
 RUN chsh -s /bin/bash $NB_USER
