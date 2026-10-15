@@ -51,13 +51,13 @@ RUN pip install --quiet \
       'jupyter-server-proxy==3.2.2' \
       'jupyterlab_execute_time==2.3.1' \
       'markupsafe==2.1.2' \
-      'git+https://github.com/betatim/vscode-binder' \
+      'git+https://github.com/betatim/vscode-binder@878cf5ee4762dfb9f8a97d6b9259a5683cf2b7d1' \
     && \
     # install custom extensions for jupyterlab
     pip install \
-      'jupyterlab_tensorboard_pro' \
-      'jupyterlab-rise' \
-      'rise' \
+      'jupyterlab_tensorboard_pro==4.0.0' \
+      'jupyterlab-rise==0.43.1' \
+      'rise==5.7.1' \
     && \
     conda install --quiet --yes \
     -c conda-forge \
@@ -73,7 +73,7 @@ RUN pip install --quiet \
     pip install \
       'jupyterlab-git==0.41.0' \
       'jupyterlab-lsp==3.10.2' \
-      'jupyterlab-language-pack-fr-FR' \
+      'jupyterlab-language-pack-fr-FR==4.3.post3' \
     && \
     conda clean --all -f -y && \
     jupyter serverextension enable --py jupyter_server_proxy && \
@@ -82,7 +82,7 @@ RUN pip install --quiet \
       '@jupyterlab/translation-extension@3.0.4' \
       '@jupyterlab/server-proxy@2.1.2' \
       'jupyterlab-plotly@4.14.3' \
-      'nbdime-jupyterlab' \
+      'nbdime-jupyterlab@2.2.0' \
     && \
     jupyter lab build && \
     jupyter lab clean && \
@@ -96,8 +96,8 @@ RUN pip install --quiet \
 # See https://github.com/StatCan/aaw-kubeflow-containers/issues/293
 RUN pip3 --no-cache-dir install --quiet \
       'pillow==9.4.0' \
-      'matplotlib' \
-      'ipywebrtc' \
+      'matplotlib==3.6.0' \
+      'ipywebrtc==0.6.0' \
       'notebook==6.5.3' \
       'pyyaml==6.0' \
       'jupyterlab==3.6.1' && \
@@ -110,14 +110,14 @@ RUN pip3 --no-cache-dir install --quiet \
 RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
     && \
     conda install -c conda-forge \
-      'r-languageserver' \
-      'python-lsp-server' \
+      'r-languageserver=0.3.15' \
+      'python-lsp-server=1.10.1' \
     && \
     npm i -g \
-    'bash-language-server'  \
-    'dockerfile-language-server-nodejs' \
-    'javascript-typescript-langserver' \
-    'unified-language-server' \
+    'bash-language-server@5.6.0'  \
+    'dockerfile-language-server-nodejs@0.14.0' \
+    'javascript-typescript-langserver@2.11.3' \
+    'unified-language-server@4.0.1' \
     'yaml-language-server@0.18.0'  && \
     conda clean --all -f -y && \
     fix-permissions $CONDA_DIR && \
@@ -128,14 +128,16 @@ RUN julia -e 'using Pkg; Pkg.add("LanguageServer")' \
     fix-permissions /home/$NB_USER
 
 # Install common package
+# Versions are pinned: newer opencv-python requires numpy 2, newer huggingface_hub is incompatible with gradio 4
 RUN pip install --quiet \
         # 'git+https://github.com/fdsf53451001/nb_serverproxy_gradio.git' \
-        'gradio' \
-        'matplotlib' \
-        'gdown' \
-        'RISE' \
-        'ipyvolume' \
-        'opencv-python' \
+        'gradio==4.44.1' \
+        'huggingface_hub==0.30.2' \
+        'matplotlib==3.6.0' \
+        'gdown==5.2.0' \
+        'RISE==5.7.1' \
+        'ipyvolume==0.6.3' \
+        'opencv-python==4.11.0.86' \
     && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
