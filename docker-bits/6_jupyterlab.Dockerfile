@@ -41,6 +41,10 @@ RUN code-server --install-extension ms-python.python@2022.16.1 && \
     code-server --install-extension quarto.quarto@1.53.1 && \
     fix-permissions $XDG_DATA_HOME
 
+# Let yarn install npm packages that require a newer Node.js than this image provides (used by `jupyter lab build`).
+# ARG (not ENV) keeps this setting out of the final image.
+ARG YARN_IGNORE_ENGINES=true
+
 # Default environment
 RUN pip install --quiet \
       'jupyter-lsp==1.5.1' \
