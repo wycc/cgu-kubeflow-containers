@@ -20,7 +20,6 @@ RUN apt-get update && \
   && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=minio/mc:RELEASE.2022-03-17T20-25-06Z /bin/mc /usr/local/bin/mc-original
 
 ARG KUBECTL_VERSION=v1.15.10
 ARG KUBECTL_URL=https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
@@ -44,7 +43,7 @@ RUN apt-get update && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
-# kubectl, mc, and az
+# kubectl and az
 RUN curl -LO "${KUBECTL_URL}" \
     && echo "${KUBECTL_SHA} kubectl" | sha256sum -c - \
     && chmod +x ./kubectl \
