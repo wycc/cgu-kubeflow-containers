@@ -14,4 +14,3 @@ RUN pip install --quiet \
     'opencv-python' \
     && fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
-COPY  enable_persistent.ipynb /opt/conda/
