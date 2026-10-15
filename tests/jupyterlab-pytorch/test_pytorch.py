@@ -23,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 def test_pytorch(container, name, command):
     """Basic pytorch tests"""
     LOGGER.info(f"Testing pytorch: {name} ...")
-    c = container.run(tty=True, command=["start.sh", "conda", "run", "-n", "torch", "python", "-c", command])
+    c = container.run(tty=True, command=["start.sh", "conda", "run", "-n", "pytorch", "python", "-c", command])
     rv = c.wait(timeout=30)
     assert rv == 0 or rv["StatusCode"] == 0, f"Command {command} failed"
     logs = c.logs(stdout=True).decode("utf-8")
