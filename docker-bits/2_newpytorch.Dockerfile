@@ -1,3 +1,8 @@
+# Constrain every pip install in this build (including dependencies) to the versions in newlab-pip-constraints.txt,
+# so rebuilds produce the same packages. ARG (not ENV) applies it at build time only, not to users' own pip installs.
+COPY newlab-pip-constraints.txt /tmp/newlab-pip-constraints.txt
+ARG PIP_CONSTRAINT=/tmp/newlab-pip-constraints.txt
+
 # 安裝PyTorch
 # Versions are pinned: newer opencv-python requires numpy 2, which breaks pandas, scikit-learn and matplotlib
 RUN pip install --quiet \
