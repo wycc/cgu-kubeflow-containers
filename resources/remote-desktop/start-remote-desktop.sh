@@ -196,7 +196,10 @@ NB_PREFIX=${NB_PREFIX:-/vnc}
 sed -i "s~\${NB_PREFIX}~$NB_PREFIX~g" /etc/nginx/nginx.conf
 
 # start php service, and tinyfilemanager
-service php8.1-fpm start
+# Start whichever php-fpm version is installed (php7.4 in remote-desktop, php8.1 in remote-desktop-ros)
+for php_fpm in /etc/init.d/php*-fpm; do
+    service "$(basename "$php_fpm")" start
+done
 mv /var/www/html/index.php $HOME/index.php
 
 # fix home folder permission
