@@ -20,12 +20,26 @@ if [ ! -f /home/jovyan/AddNewCondaEnvironment.ipynb ]; then
 fi
 echo "--------------------Done--------------------"
 
-if [ ! -d /home/jovyan/envs/ ]; then
-  echo "--------------------build symbolic links for pytorch --------------------"
-  mkdir /home/jovyan/envs
-  mv /opt/conda/envs /opt/conda/envs.old 
-  ln -s /home/jovyan/envs /opt/conda/envs
+echo "--------------------Configuring conda environment directories--------------------"
+# Environments shipped with the image stay in /opt/conda/envs. Environments saved with
+# enable_persistent.ipynb are in ~/envs on the persistent volume: add that directory to conda's
+# search path (after ~/.conda/envs, before /opt/conda/envs) so both are visible and a saved copy
+# takes precedence over the image's environment of the same name.
+if [ -d "$HOME/envs" ]; then
+  if conda config --show envs_dirs | grep -qx "  - $HOME/envs"; then
+    echo "$HOME/envs is already in envs_dirs"
+  elif ! conda config --system --append envs_dirs "$HOME/envs"; then
+    echo "ERROR: could not add $HOME/envs to conda envs_dirs; environments in it will not be listed" >&2
+  fi
+elif [ -e "$HOME/envs" ]; then
+  echo "ERROR: $HOME/envs exists but is not a directory; environments saved there are not used" >&2
 fi
+for env in /opt/conda/envs/*/; do
+  [ -d "${env}conda-meta" ] || continue
+  env_list=${env_list:-$(conda env list)}
+  grep -q " ${env%/}\$" <<< "$env_list" \
+    || echo "ERROR: conda environment ${env%/} from the image is not visible to conda" >&2
+done
 
 # Configure the shell! If not already configured.
 # if [ ! -f /home/$NB_USER/.zsh-installed ]; then
