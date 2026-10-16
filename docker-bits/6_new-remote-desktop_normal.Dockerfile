@@ -433,8 +433,8 @@ RUN apt-get update \
     && apt-get install -y php7.4-fpm \
     && apt-get install language-pack-zh-han* -y \
     && apt-get install ibus-gtk3 ibus-data ibus-chewing ibus-pinyin ibus-table-cangjie3 -y \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayisetup.sh \
-    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/master/dayi3.cin \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/649bccfa9a9c6095f53545706d11395aea4adc06/dayisetup.sh \
+    && wget https://raw.githubusercontent.com/Alger23/ubuntu_dayi_for_ibus/649bccfa9a9c6095f53545706d11395aea4adc06/dayi3.cin \
     && chmod u+x dayisetup.sh \
     && sed -i 's/ibus-daemon/#ibus-daemon/g' dayisetup.sh \
     && ./dayisetup.sh \
