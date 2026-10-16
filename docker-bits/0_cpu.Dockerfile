@@ -4,7 +4,8 @@
 # https://github.com/jupyter/docker-stacks/wiki
 
 ARG BASE_VERSION=ed2908bbb62e
-FROM jupyter/datascience-notebook:$BASE_VERSION
+# The digest makes the base image immutable; update it together with BASE_VERSION
+FROM jupyter/datascience-notebook:$BASE_VERSION@sha256:58a9bc9b48ea3af154134ae5866ce1dca820b478cee243fbe742d48a46622462
 
 USER root
 
