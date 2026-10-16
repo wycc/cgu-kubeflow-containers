@@ -196,16 +196,26 @@ NB_PREFIX=${NB_PREFIX:-/vnc}
 sed -i "s~\${NB_PREFIX}~$NB_PREFIX~g" /etc/nginx/nginx.conf
 
 # start php service, and tinyfilemanager
-# Start whichever php-fpm version is installed (php7.4 in remote-desktop, php8.1 in remote-desktop-ros)
+# Start whichever php-fpm version is installed
+php_fpm_started=false
 for php_fpm in /etc/init.d/php*-fpm; do
-    service "$(basename "$php_fpm")" start
+    [ -x "$php_fpm" ] || continue
+    if service "$(basename "$php_fpm")" start; then
+        php_fpm_started=true
+    else
+        echo "ERROR: failed to start $(basename "$php_fpm")" >&2
+    fi
 done
+$php_fpm_started || echo "ERROR: no php-fpm service started; the file manager will not work" >&2
 mv /var/www/html/index.php $HOME/index.php
 
 # fix home folder permission
 # chown jovyan:users $HOME/*
 
-/etc/init.d/ssh start
+# openssh-server is installed in remote-desktop but not in remote-desktop-ros
+if [ -x /etc/init.d/ssh ]; then
+    /etc/init.d/ssh start
+fi
 
 nginx
 wait
