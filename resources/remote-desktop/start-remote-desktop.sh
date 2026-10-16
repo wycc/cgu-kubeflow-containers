@@ -212,7 +212,10 @@ mv /var/www/html/index.php $HOME/index.php
 # fix home folder permission
 # chown jovyan:users $HOME/*
 
-/etc/init.d/ssh start
+# openssh-server is installed in remote-desktop but not in remote-desktop-ros
+if [ -x /etc/init.d/ssh ]; then
+    /etc/init.d/ssh start
+fi
 
 nginx
 wait
