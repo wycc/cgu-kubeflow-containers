@@ -3,7 +3,9 @@
 USER root
 WORKDIR /home/$NB_USER
 EXPOSE 8888
-COPY start-custom.sh /usr/local/bin/ 
+COPY start-custom.sh /usr/local/bin/
+# Copied into the user's home directory by start-custom.sh
+COPY AddNewCondaEnvironment.ipynb /opt/conda/AddNewCondaEnvironment.ipynb
 COPY trino-wrapper.sh /usr/local/bin/trino
 
 # Add --user to all pip install calls and point pip to Artifactory repository

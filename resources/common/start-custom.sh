@@ -15,8 +15,10 @@ fi
 test -z "$GIT_EXAMPLE_NOTEBOOKS" || git clone "$GIT_EXAMPLE_NOTEBOOKS"
 
 echo "--------------------Ensure Notebook is here--------------------"
-if [ ! -f /home/jovyan/AddNewCondaEnvironment.ipynb ]; then
-  cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/cgu-1.8/resources/common/AddNewCondaEnvironment.ipynb
+# The home directory is a persistent volume, so copy the notebook shipped in the image on first start
+if [ ! -f "$HOME/AddNewCondaEnvironment.ipynb" ]; then
+  cp /opt/conda/AddNewCondaEnvironment.ipynb "$HOME/" \
+    || echo "ERROR: could not copy AddNewCondaEnvironment.ipynb to $HOME" >&2
 fi
 echo "--------------------Done--------------------"
 
