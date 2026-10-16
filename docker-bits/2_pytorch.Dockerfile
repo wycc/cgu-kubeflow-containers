@@ -1,6 +1,6 @@
 
 # mamba: conda's classic solver runs out of memory resolving this environment
-# numpy<2: pytorch 1.12 is built against numpy 1.x
+# numpy 1.26.4 (the last 1.x release): pytorch 1.12 is built against numpy 1.x
 RUN conda create -n pytorch python=3.9 && \
    mamba install -n pytorch --quiet --yes -c pytorch \
      'mkl-devel=2022.1.0'\
@@ -9,7 +9,7 @@ RUN conda create -n pytorch python=3.9 && \
      'torchaudio==0.12.1' \
      'ipykernel==6.21.3' \
      'torchtext==0.13.1' \
-     'numpy<2' \
+     'numpy==1.26.4' \
    && \
    conda clean --all -f -y && \
    touch /etc/conda_disable_copy && \
@@ -28,7 +28,7 @@ RUN source /opt/conda/bin/activate pytorch && \
         'ipyvolume==0.6.3' \
         'gdown==5.2.0' \
         'opencv-python==4.11.0.86' \
-        'numpy<2' \
+        'numpy==1.26.4' \
     && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
