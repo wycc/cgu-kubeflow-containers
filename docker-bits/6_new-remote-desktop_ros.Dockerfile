@@ -408,13 +408,13 @@ RUN cd /opt/catkin_ws/src && \
     git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
 
 #python packages for ROS
-RUN conda upgrade conda && \
-    conda install -c conda-forge rospkg && \
-    conda install -c conda-forge defusedxml && \
-    conda install -c anaconda numpy && \
-    conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch && \
-    conda install -c anaconda pandas && \
-    conda install -c conda-forge matplotlib
+# Installs exact package files (conda, rospkg, defusedxml, numpy, pytorch 1.7 with cudatoolkit 10.1, pandas,
+# matplotlib and their dependencies) without running the solver, which needs more than 9 GB of memory for these
+# packages. brotlipy and chardet come with Miniconda but are not part of the listed environment.
+COPY ros-conda-explicit.txt /tmp/ros-conda-explicit.txt
+RUN conda install -y --file /tmp/ros-conda-explicit.txt && \
+    conda remove -y --force brotlipy chardet && \
+    rm /tmp/ros-conda-explicit.txt
     # conda install -c anaconda tensorflow-gpu
 # RUN conda install -c "conda-forge/label/cf202003" opencv
 
