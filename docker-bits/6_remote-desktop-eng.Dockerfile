@@ -207,16 +207,15 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
     && /bin/bash /resources/vs-code-desktop.sh --install \
     && clean-layer.sh
 
-'''
-# Install VS Code 1.99.0  (只改這裡)
-ARG VSCODE_VERSION=1.99.3
-RUN wget -qO vscode.deb \
-       "https://update.code.visualstudio.com/${VSCODE_VERSION}/linux-deb-x64/stable" \
-    && apt-get update \
-    && apt-get install -y ./vscode.deb \
-    && rm vscode.deb \
-    && clean-layer.sh
-'''
+# Disabled: VS Code is installed by vs-code-desktop.sh in the step above.
+# # Install VS Code 1.99.0  (只改這裡)
+# ARG VSCODE_VERSION=1.99.3
+# RUN wget -qO vscode.deb \
+#        "https://update.code.visualstudio.com/${VSCODE_VERSION}/linux-deb-x64/stable" \
+#     && apt-get update \
+#     && apt-get install -y ./vscode.deb \
+#     && rm vscode.deb \
+#     && clean-layer.sh
 
 # Install Visual Studio Code extensions
 # https://github.com/cdr/code-server/issues/171
