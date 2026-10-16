@@ -399,13 +399,20 @@ RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
 RUN mkdir -p /opt/catkin_ws/src
 
 
+# Each repository is reset to a fixed commit so the workspace sources do not change between builds
 RUN cd /opt/catkin_ws/src && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
-    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git -C turtlebot3_msgs reset -q --hard 4a52332bb2ec80be5486cfe95b1a21e2f4c5c6b5 && \
+    git clone -b noetic https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git -C turtlebot3 reset -q --hard 4ae959ea6a52415c90bf752d2b76e3e28f8a87e2 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
+    git -C turtlebot3_simulations reset -q --hard abcc052fbc2572c50177076c249ffafdfff52f52 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
+    git -C turtlebot3_manipulation reset -q --hard 70451aa59fbf1dde7687919119d475dd57775c2d && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
+    git -C turtlebot3_manipulation_simulations reset -q --hard 093f4860b43a1d8e39834085147dfb3d222d8e19 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git && \
+    git -C open_manipulator_dependencies reset -q --hard d236faa313a700b1c46f72f8501f1c04df917167
 
 #python packages for ROS
 # Installs exact package files (conda, rospkg, defusedxml, numpy, pytorch 1.7 with cudatoolkit 10.1, pandas,
