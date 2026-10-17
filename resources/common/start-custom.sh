@@ -1,59 +1,4 @@
 #!/bin/bash
-
-# 設置MPS環境變量
-export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
-export CUDA_MPS_LOG_DIRECTORY=/var/log/nvidia-mps
-export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=50
-
-# 啟動MPS控制守護進程
-nvidia-cuda-mps-control -d
-
-# 設置默認的設備pinned內存限制
-echo set_default_device_pinned_mem_limit 0 12G | nvidia-cuda-mps-control
-
-# 添加等待以確保MPS控制守護進程完全啟動
-sleep 5
-
-# 確保MPS守護進程啟動成功後再設置具體的內存限制
-pid=$(pgrep -f nvidia-cuda-mps-control)
-if [ -n "$pid" ]; then
-    echo set_device_pinned_mem_limit $pid 0 12G | nvidia-cuda-mps-control
-else
-    echo "MPS控制守護進程未啟動"
-fi
-
-# 限制具體客戶端的內存限制
-export CUDA_MPS_DEVICE_MEM_LIMIT="0=12G"
-
-# 啟動其他應用或任務
-# 這裡可以放其他需要啟動的命令或腳本
-
-
-# move conda env to home directory to keep packages data
-echo "--------------------Do we need to copy files?--------------------"
-if [ ! -f /etc/conda_disable_copy ]; then
-  if [ ! -d /home/jovyan/envs ]; then
-    echo "--------------------Copy files now--------------------"
-    cp -a /opt/conda/envs /home/jovyan/conda/envs
-  fi
-else
-  if [ ! -f /home/jovyan/enable_persistent.ipynb ]; then
-    (cd /home/jovyan; wget https://raw.githubusercontent.com/wycc/cgu-kubeflow-containers/master/resources/common/enable_persistent.ipynb)
-  fi
-fi
-
-if [ -d /home/jovyan/envs/tensorflow ]; then
-  echo "--------------------build symbolic links for tensorflow --------------------"
-  mv /opt/conda/envs /opt/conda/envs.old
-  ln -s /home/jovyan/envs /opt/conda/envs
-fi
-
-if [ -d /home/jovyan/envs/pytorch ]; then
-  echo "--------------------build symbolic links for pytorch --------------------"
-  mv /opt/conda/envs /opt/conda/envs.old 
-  ln -s /home/jovyan/envs /opt/conda/envs
-fi
-
 echo "--------------------Starting up--------------------"
 if [ -d /var/run/secrets/kubernetes.io/serviceaccount ]; then
   while ! curl -s -f http://127.0.0.1:15020/healthz/ready; do sleep 1; done
@@ -68,6 +13,35 @@ else
 fi
 
 test -z "$GIT_EXAMPLE_NOTEBOOKS" || git clone "$GIT_EXAMPLE_NOTEBOOKS"
+
+echo "--------------------Ensure Notebook is here--------------------"
+# The home directory is a persistent volume, so copy the notebook shipped in the image on first start
+if [ ! -f "$HOME/AddNewCondaEnvironment.ipynb" ]; then
+  cp /opt/conda/AddNewCondaEnvironment.ipynb "$HOME/" \
+    || echo "ERROR: could not copy AddNewCondaEnvironment.ipynb to $HOME" >&2
+fi
+echo "--------------------Done--------------------"
+
+echo "--------------------Configuring conda environment directories--------------------"
+# Environments shipped with the image stay in /opt/conda/envs. Environments saved with
+# enable_persistent.ipynb are in ~/envs on the persistent volume: add that directory to conda's
+# search path (after ~/.conda/envs, before /opt/conda/envs) so both are visible and a saved copy
+# takes precedence over the image's environment of the same name.
+if [ -d "$HOME/envs" ]; then
+  if conda config --show envs_dirs | grep -qx "  - $HOME/envs"; then
+    echo "$HOME/envs is already in envs_dirs"
+  elif ! conda config --system --append envs_dirs "$HOME/envs"; then
+    echo "ERROR: could not add $HOME/envs to conda envs_dirs; environments in it will not be listed" >&2
+  fi
+elif [ -e "$HOME/envs" ]; then
+  echo "ERROR: $HOME/envs exists but is not a directory; environments saved there are not used" >&2
+fi
+for env in /opt/conda/envs/*/; do
+  [ -d "${env}conda-meta" ] || continue
+  env_list=${env_list:-$(conda env list)}
+  grep -q " ${env%/}\$" <<< "$env_list" \
+    || echo "ERROR: conda environment ${env%/} from the image is not visible to conda" >&2
+done
 
 # Configure the shell! If not already configured.
 # if [ ! -f /home/$NB_USER/.zsh-installed ]; then
@@ -179,6 +153,7 @@ else
   mkdir -p $HOME/.conda/envs
 fi
 
+conda init
 
 printenv | grep KUBERNETES >> /opt/conda/lib/R/etc/Renviron
 

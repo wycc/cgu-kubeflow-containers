@@ -255,15 +255,10 @@ RUN \
     VS_LOCALE_REPO_VERSION="1.68.3" && \
     git clone -b release/$VS_LOCALE_REPO_VERSION https://github.com/microsoft/vscode-loc.git && \
     cd vscode-loc && \
-    npm install -g --unsafe-perm vsce@1.103.1 && \
-    cd i18n/vscode-language-pack-fr && \
-    vsce package && \
-    bsdtar -xf vscode-language-pack-fr-$VS_FRENCH_VERSION.vsix extension && \
-    mv extension $HOME/.vscode/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION && \
-    cd ../../../ && \
+    mv i18n/vscode-language-pack-fr $HOME/.vscode/extensions/ms-ceintl.vscode-language-pack-fr-$VS_FRENCH_VERSION && \
+    cd ../ && \
     # -fr option is required. git clone protects the directory and cannot delete it without -fr
     rm -fr vscode-loc && \
-    npm uninstall -g vsce && \
     # Fix permissions
     fix-permissions $HOME/.vscode/extensions/ && \
     # Cleanup
@@ -404,22 +399,29 @@ RUN /bin/bash -c  '. /opt/ros/noetic/setup.bash'
 RUN mkdir -p /opt/catkin_ws/src
 
 
+# Each repository is reset to a fixed commit so the workspace sources do not change between builds
 RUN cd /opt/catkin_ws/src && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
-    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
-    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git -C turtlebot3_msgs reset -q --hard 4a52332bb2ec80be5486cfe95b1a21e2f4c5c6b5 && \
+    git clone -b noetic https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git -C turtlebot3 reset -q --hard 4ae959ea6a52415c90bf752d2b76e3e28f8a87e2 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git && \
+    git -C turtlebot3_simulations reset -q --hard abcc052fbc2572c50177076c249ffafdfff52f52 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git && \
+    git -C turtlebot3_manipulation reset -q --hard 70451aa59fbf1dde7687919119d475dd57775c2d && \
+    git clone -b main https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git && \
+    git -C turtlebot3_manipulation_simulations reset -q --hard 093f4860b43a1d8e39834085147dfb3d222d8e19 && \
+    git clone -b main https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git && \
+    git -C open_manipulator_dependencies reset -q --hard d236faa313a700b1c46f72f8501f1c04df917167
 
 #python packages for ROS
-RUN conda upgrade conda && \
-    conda install -c conda-forge rospkg && \
-    conda install -c conda-forge defusedxml && \
-    conda install -c anaconda numpy && \
-    conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.1 -c pytorch && \
-    conda install -c anaconda pandas && \
-    conda install -c conda-forge matplotlib
+# Installs exact package files (conda, rospkg, defusedxml, numpy, pytorch 1.7 with cudatoolkit 10.1, pandas,
+# matplotlib and their dependencies) without running the solver, which needs more than 9 GB of memory for these
+# packages. brotlipy and chardet come with Miniconda but are not part of the listed environment.
+COPY ros-conda-explicit.txt /tmp/ros-conda-explicit.txt
+RUN conda install -y --file /tmp/ros-conda-explicit.txt && \
+    conda remove -y --force brotlipy chardet && \
+    rm /tmp/ros-conda-explicit.txt
     # conda install -c anaconda tensorflow-gpu
 # RUN conda install -c "conda-forge/label/cf202003" opencv
 
@@ -473,15 +475,14 @@ RUN apt update \
 
 # setup tinyfilemanager
 USER root
+# php7.4-fpm comes from Ubuntu 20.04 itself (the ondrej/php PPA no longer publishes packages for 20.04)
 RUN apt update \
     && sudo apt install -y software-properties-common \
-    && add-apt-repository ppa:ondrej/php \
-    && apt update \
-    && apt install php8.1-fpm -y \
+    && apt install php7.4-fpm -y \
     && apt install minicom socat -y
-USER $NB_USER 
-COPY --chown=$NB_USER:100 www.conf /etc/php/8.1/fpm/pool.d/www.conf
-COPY php8.1-fpm /etc/init.d/php8.1-fpm
+USER $NB_USER
+COPY --chown=$NB_USER:100 www.conf /etc/php/7.4/fpm/pool.d/www.conf
+COPY php7.4-fpm /etc/init.d/php7.4-fpm
 
 # temporary store, will move to home directory after start
 COPY --chown=$NB_USER:100 tinyfilemanager.php /var/www/html/index.php 
