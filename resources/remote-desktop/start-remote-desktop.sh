@@ -197,13 +197,22 @@ NB_PREFIX=${NB_PREFIX:-/vnc}
 sed -i "s~\${NB_PREFIX}~$NB_PREFIX~g" /etc/nginx/nginx.conf
 
 # start php service, and tinyfilemanager
-service php8.1-fpm start
+# images ship different php versions, start whichever is installed
+for fpm in php8.1-fpm php7.4-fpm; do
+  [ -x /etc/init.d/$fpm ] && service $fpm start
+done
 mv /var/www/html/index.php $HOME/index.php
 
 # fix home folder permission
 # chown jovyan:users $HOME/*
 
 /etc/init.d/ssh start
+# show the ssh nodePort on the desktop
+SSH_PORT=$(kubectl get svc $(echo $HOSTNAME | cut -d- -f1)-ssh-service -o=jsonpath="{.spec.ports[*].nodePort}" 2>/dev/null)
+rm -rf $HOME/Desktop/ssh_port_is_*
+if [ -n "$SSH_PORT" ]; then
+  mkdir -p $HOME/Desktop/ssh_port_is_$SSH_PORT
+fi
 
 nginx
 wait
