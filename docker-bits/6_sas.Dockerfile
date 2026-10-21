@@ -20,7 +20,8 @@ RUN groupadd -g 1337 supergroup && \
 
 COPY --from=SASHome /usr/local/SASHome /usr/local/SASHome
 
-COPY --from=minio/mc:RELEASE.2022-03-17T20-25-06Z /bin/mc /usr/local/bin/mc-original
+# minio/mc images and binaries were taken down, reuse the same mc release from our V1.1.0 image
+COPY --from=cguaicadmin/remote-desktop:V1.1.0 /usr/local/bin/mc-original /usr/local/bin/mc-original
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmagic1 \

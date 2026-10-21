@@ -20,7 +20,8 @@ RUN apt-get update && \
   && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=minio/mc:RELEASE.2022-03-17T20-25-06Z /bin/mc /usr/local/bin/mc-original
+# minio/mc images and binaries were taken down, reuse the same mc release from our V1.1.0 image
+COPY --from=cguaicadmin/remote-desktop:V1.1.0 /usr/local/bin/mc-original /usr/local/bin/mc-original
 
 ARG KUBECTL_VERSION=v1.15.10
 ARG KUBECTL_URL=https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
