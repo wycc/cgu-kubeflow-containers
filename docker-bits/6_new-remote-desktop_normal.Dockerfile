@@ -332,7 +332,7 @@ RUN apt-get remove -y -q light-locker
 
 
 # apt-get may result in root-owned directories/files under $HOME
-RUN usermod -l $NB_USER rstudio && \
+RUN usermod -l $NB_USER -d /home/$NB_USER rstudio && \
     chown -R $NB_UID:$NB_GID $HOME
 
 ENV NB_USER=$NB_USER

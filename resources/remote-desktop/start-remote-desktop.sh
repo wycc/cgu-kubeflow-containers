@@ -14,6 +14,21 @@ else
   sleep infinity
 fi
 
+# keep passwd/shadow in the home volume so password changes survive restarts
+# (the password hash lives in shadow, so passwd alone is not enough)
+for f in passwd shadow; do
+  persist=/home/jovyan/$f
+  # jovyan owns the home dir and could swap the file, only trust root-owned copies
+  if [ -L "$persist" ] || { [ -e "$persist" ] && [ "$(stat -c %u "$persist")" != 0 ]; }; then
+    echo "WARNING: $persist is not owned by root, discarding it"
+    rm -f "$persist"
+  fi
+  if [ ! -f "$persist" ]; then
+    cp -a /etc/$f "$persist"
+  fi
+  ln -sf "$persist" /etc/$f
+done
+
 test -z "$GIT_EXAMPLE_NOTEBOOKS" || git clone "$GIT_EXAMPLE_NOTEBOOKS"
 
 
